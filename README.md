@@ -1,4 +1,4 @@
-This project uses CMake and vcpkg for managing C++ dependencies. It serves as a simple example to test your build setup before we get into more complicted code.
+This project uses CMake and vcpkg for managing C++ dependencies.
 
 ## Building Using CMake Presets
 
@@ -18,8 +18,18 @@ cd buildVCPkg
 cmake --build .
 ```
 
-Your executables will then be in the build folder. They may be in sub-folders depending on the environment.
+This compiles the code and sets up executables defined in the CMakeLists.txt file under each c++ directory. You will need to run build upon new changes made locally.
 
+Your executables will then be in the build folder. They may be in sub-folders depending on the environment.
+### Executable Example (this would run a current unit test on vec3 class):
+```
+  cd buildVCPkg
+  ./utests/utest_vec3
+
+  On Windows Different:
+   cd buildVCPkg
+  ./utests/utest_vec3.exe
+```
 
 
 ## Development Environment Setup

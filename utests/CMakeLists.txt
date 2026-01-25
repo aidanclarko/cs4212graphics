@@ -5,7 +5,7 @@
 # src files.
 #
 include_directories(${CMAKE_SOURCE_DIR}/src)
-include_directories(${CMAKE_SOURCE_DIR}/renderlib)
+include_directories(${CMAKE_SOURCE_DIR}/src/renderlib)
 
 enable_testing()
 include(CTest)

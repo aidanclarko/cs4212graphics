@@ -1,3 +1,5 @@
+add_subdirectory(renderlib)
+
 add_library (cs4212-util
   ArgumentParsing.cpp ArgumentParsing.h
   handleGraphicsArgs.cpp handleGraphicsArgs.h

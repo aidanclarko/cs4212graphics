@@ -84,9 +84,6 @@ find_package(glfw3 CONFIG REQUIRED)
 # not using Vulkan at the moment
 # find_package(Vulkan OPTIONAL)
 
-# Add the renderlib dir to build the library.
-add_subdirectory(renderlib)
-
 # Add the src directory to build the library.
 add_subdirectory(src)
 

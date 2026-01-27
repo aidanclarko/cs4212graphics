@@ -2,7 +2,6 @@
 
 #include <vector>
 #include "vec3.h"
-#include "png++/png.hpp"
 #include <cmath>
 
 class Framebuffer {
@@ -13,18 +12,22 @@ class Framebuffer {
         //default
         Framebuffer();
         Framebuffer(int w, int h);
+        int w() const {return width;}
+        int h() const {return height;}
+        std::vector<vec3> getStorage() {return fbStorage;}
 
         double floatToPngColor(float c);
 
-        //simple setter
         void setPixelColor(int i, vec3 color);
 
         void clearPNGToColor(vec3 color);
 
+        void setPNGToSolidColor(vec3 color);
 
-        //clear
-        //arg single color, lerp, ...
-        // convert 0 to 1 float to 0 255
+        //probably merge these two funcs
+        vec3 findLERP(vec3 v1, vec3 v2, float t);
 
-        //export png
+        void setPNGToLERP(vec3 v1, vec3 v2);
+
+        void setPNGCheckered(vec3 c1, vec3 c2);
 };

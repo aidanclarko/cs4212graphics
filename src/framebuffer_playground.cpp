@@ -82,36 +82,3 @@ int main(int argc, char *argv[]) {
     pngThree.write("checker.png");
 
 }
-
-// these are notes for future classes
-/*
-
-Shape Base class -> triange, circle inherit..
-
-pure virtual class Shape (id do an interface) {
-//factory class
-    private:
-        width, height, 
-    public:
-}
-
-class Light {
-    priv:
-        intensity?
-        hue?
-    pub:
-}
-
-class Scene {
-    list of shapes, cameras, whatever defines the scene
-}
-
-class Camera {
-    priv:
-    fov, basis,
-    pub:
-}
-
-class Shader{}
-
-*/

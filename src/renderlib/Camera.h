@@ -20,7 +20,7 @@ class Camera {
 
         virtual void generateRay(int i, int j, Ray &r) = 0;
         
-    // protected:
+    protected:
         vec3 pos;
         vec3 U,V,W;
         int nx, ny;

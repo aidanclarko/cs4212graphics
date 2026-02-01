@@ -9,6 +9,10 @@ class PerspectiveCamera : public Camera {
     public:
         PerspectiveCamera() : Camera() {}
         PerspectiveCamera(float nx, float ny): Camera(nx, ny) {}
+        PerspectiveCamera(float nx, float ny, point3 eye, vec3 direction, float imageplane_height, float imageplane_width, float focalLength) :
+            Camera(nx, ny, eye, direction, imageplane_height, imageplane_width, focalLength) {
+                std::cout << "W: " << W << "\nU: " << U << "\nV: " << V << std::endl;
+            }
 
         void generateRay(int i, int j, Ray &ray) override {
             float u,v;

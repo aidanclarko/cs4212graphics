@@ -16,9 +16,34 @@ class Camera {
             U(1,0,0), V(0,-1,0), W(0,0,1), 
             nx(pixel_nx), ny(pixel_ny), focalLength(0.098), imageplane_height(0.5), imageplane_width(0.5) {}
             
+        Camera(int pixel_nx, int pixel_ny, point3 eye, vec3 direction, 
+                float imageplane_height, float imageplane_width, float focalLength) :
+                pos(eye),
+                W(unit_vector(-direction)),
+                nx(pixel_nx), ny(pixel_ny),
+                imageplane_height(imageplane_height), 
+                imageplane_width(imageplane_width),
+                focalLength(focalLength) 
+            {
+                vec3 t;
+                if(fabs(W.x()) > 0.9) {
+                    t = vec3(0,1,0);
+                } else {
+                    t = vec3(1, 0, 0);
+                }
+                
+                U = unit_vector(cross(t, W));
+                V = cross(W, U);
+            }
+
+
         ~Camera() {}
 
         virtual void generateRay(int i, int j, Ray &r) = 0;
+
+        void handleW(point3 eye, vec3 dir) {
+
+        }
         
     protected:
         vec3 pos;

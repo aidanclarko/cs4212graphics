@@ -6,18 +6,25 @@
 #include <cmath>
 
 int main() {
+    point3 eye = point3(-5.5, -3.2, 1.0);
+    vec3 direction = vec3(7.6, 6.6, 3.0);
+    float focalLength = 0.35;
+    float imageplaneWidth = .25;
+    float imageplaneHeight = .25;
 
     Framebuffer fb(100, 100);
 
-    PerspectiveCamera p(fb.w(), fb.h()); 
+    PerspectiveCamera p(fb.w(), fb.h(), eye, direction, imageplaneHeight, imageplaneWidth, focalLength); 
 
 
     for(int x= 0; x < fb.w(); x++) {
         for(int y = 0; y < fb.h(); y++) {
             Ray r;
             p.generateRay(x, y, r);
+            
 
             vec3 ray_dir_color = 0.5 * (vec3(1,1,1) + r.direction());
+            //std::cout << ray_dir_color << '\n';
 
             fb.setPixelColor(y * fb.w() + x, ray_dir_color);
         }

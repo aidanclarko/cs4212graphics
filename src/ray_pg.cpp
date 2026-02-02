@@ -6,10 +6,15 @@
 #include <cmath>
 
 int main() {
+    point3 eye = point3(12.3, 4.5, 1.0);
+    vec3 direction = vec3(9.7, 1.0, -2.3);
+    float focalLength = 0.25;
+    float imageplaneWidth = 0.5;
+    float imageplaneHeight = 0.5;
 
-    Framebuffer fb(100, 100);
+    Framebuffer fb(200, 200);
 
-    PerspectiveCamera p(fb.w(), fb.h()); 
+    PerspectiveCamera p(fb.w(), fb.h(), eye, direction, imageplaneHeight, imageplaneWidth, focalLength); 
 
 
     for(int x= 0; x < fb.w(); x++) {
@@ -27,14 +32,16 @@ int main() {
     png::image< png::rgb_pixel > pngOne( fb.w(), fb.h() );
     std::vector<vec3> storage = fb.getStorage();
     
-    for (int y = 0; y < pngOne.get_height(); y++) {
-        for (int x = 0; x < pngOne.get_width(); x++) {
+    for (int y = 0; y < pngOne.get_width(); y++) {
+        for (int x = 0; x < pngOne.get_height(); x++) {
+            
             vec3 srgIndex = storage.at(y * fb.w() + x);
+           
             float r = fb.floatToPngColor(srgIndex.x());
             float g = fb.floatToPngColor(srgIndex.y());
             float b = fb.floatToPngColor(srgIndex.z());
 
-            pngOne[y][x] = png::rgb_pixel(r, g, b);
+            pngOne[(pngOne.get_height() - 1) - y][x] = png::rgb_pixel(r, g, b);
         }
     }
 

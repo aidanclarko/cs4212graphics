@@ -6,7 +6,7 @@
 Framebuffer::Framebuffer(): width(100), height(100), fbStorage(100 * 100) { }
 Framebuffer::Framebuffer(int w, int h): width(w), height(h), fbStorage(w * h) { }
 
-double Framebuffer::floatToPngColor(float c) { return (std::round(c * 255)); }
+int Framebuffer::floatToPngColor(float c) { return static_cast<int>(c * 255.0f); }
 
 
 void Framebuffer::setPixelColor(int i, vec3 color) {

@@ -16,7 +16,7 @@ class Framebuffer {
         int h() const {return height;}
         std::vector<vec3> getStorage() {return fbStorage;}
 
-        double floatToPngColor(float c);
+        int floatToPngColor(float c);
 
         void setPixelColor(int i, vec3 color);
 

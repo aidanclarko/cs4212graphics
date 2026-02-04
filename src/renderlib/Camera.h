@@ -27,10 +27,10 @@ class Camera {
             {
                 vec3 t;
 
-                // idk about the colinear thing if else is just basis
+                // if colinear ((dot) = 1 )then use a different basis for t
                 t = vec3(0,1,0);
 
-                if(abs(dot(W, t)) > 0.999f) {
+                if(fabs(dot(t, W)) > 0.999f) {
                     t = vec3(1,0,0);
                 }
         

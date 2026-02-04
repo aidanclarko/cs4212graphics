@@ -6,9 +6,9 @@
 #include <cmath>
 
 int main() {
-    point3 eye = point3(12.3, 4.5, 1.0);
-    vec3 direction = vec3(9.7, 1.0, -2.3);
-    float focalLength = 0.25;
+    point3 eye = point3(3, -4, 12);
+    vec3 direction = vec3(-8, -5, 10);
+    float focalLength = 0.001;
     float imageplaneWidth = 0.5;
     float imageplaneHeight = 0.5;
 

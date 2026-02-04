@@ -1,6 +1,7 @@
 #include "Framebuffer.h"
 #include "vec3.h"
 #include "Ray.h"
+#include "Sphere.h"
 #include "../png++/png.hpp"
 #include "PerspectiveCamera.h"
 #include <cmath>
@@ -14,8 +15,9 @@ int main() {
 
     Framebuffer fb(200, 200);
 
-    PerspectiveCamera p(fb.w(), fb.h(), eye, direction, imageplaneHeight, imageplaneWidth, focalLength); 
+    PerspectiveCamera p(fb.w(), fb.h()); 
 
+    Sphere s(point3(0,0,0), 3.0f);
 
     for(int x= 0; x < fb.w(); x++) {
         for(int y = 0; y < fb.h(); y++) {
@@ -23,8 +25,13 @@ int main() {
             p.generateRay(x, y, r);
 
             vec3 ray_dir_color = 0.5 * (vec3(1,1,1) + r.direction());
+            if(s.intersect(r)) {
+                fb.setPixelColor(y * fb.w() + x, vec3(0.902, 0, 0.38));
+            } else {
+                fb.setPixelColor(y * fb.w() + x, ray_dir_color);
+            }
 
-            fb.setPixelColor(y * fb.w() + x, ray_dir_color);
+            // fb.setPixelColor(y * fb.w() + x, ray_dir_color);
         }
     }
 

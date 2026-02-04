@@ -12,6 +12,8 @@ class Ray {
      point3& origin()   { return orig; }
      vec3& direction()  { return dir; }
 
+     
+
     point3 at(double t) const {
         return orig + t*dir;
     }

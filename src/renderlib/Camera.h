@@ -14,7 +14,7 @@ class Camera {
         Camera(int pixel_nx, int pixel_ny) : 
             pos(0,0,0),
             U(1,0,0), V(0,-1,0), W(0,0,1), 
-            nx(pixel_nx), ny(pixel_ny), focalLength(1.0), imageplane_height(0.5), imageplane_width(0.5) {}
+            nx(pixel_nx), ny(pixel_ny), focalLength(0.0001), imageplane_height(0.5), imageplane_width(0.5) {}
             
         Camera(int pixel_nx, int pixel_ny, point3 eye, vec3 direction, 
                 float imageplane_height, float imageplane_width, float focalLength) :

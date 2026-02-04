@@ -6,7 +6,7 @@
 //base class
 class Shape {
     public:
-        virtual bool intersect(const Ray& r) = 0;
+        virtual bool intersect( Ray& r) = 0;
     private:
 };
 

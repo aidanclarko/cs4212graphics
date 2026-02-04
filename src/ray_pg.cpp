@@ -7,17 +7,17 @@
 #include <cmath>
 
 int main() {
-    point3 eye = point3(3, -4, 12);
-    vec3 direction = vec3(-8, -5, 10);
-    float focalLength = 0.001;
+    point3 eye = point3(0,1,0);
+    vec3 direction = vec3(0, 0, -1);
+    float focalLength = 1.0;
     float imageplaneWidth = 0.5;
     float imageplaneHeight = 0.5;
 
-    Framebuffer fb(200, 200);
+    Framebuffer fb(800, 800);
 
-    PerspectiveCamera p(fb.w(), fb.h()); 
+    PerspectiveCamera p(fb.w(), fb.h(), eye, direction, imageplaneHeight, imageplaneWidth, focalLength); 
 
-    Sphere s(point3(0,0,0), 3.0f);
+    Sphere s(point3(0,0,-10), 1.23f);
 
     for(int x= 0; x < fb.w(); x++) {
         for(int y = 0; y < fb.h(); y++) {
@@ -25,10 +25,11 @@ int main() {
             p.generateRay(x, y, r);
 
             vec3 ray_dir_color = 0.5 * (vec3(1,1,1) + r.direction());
+            // std::cout << s.intersect(r) << '\n';
             if(s.intersect(r)) {
-                fb.setPixelColor(y * fb.w() + x, vec3(0.902, 0, 0.38));
-            } else {
                 fb.setPixelColor(y * fb.w() + x, ray_dir_color);
+            } else {
+                fb.setPixelColor(y * fb.w() + x, vec3(1,1,1));
             }
 
             // fb.setPixelColor(y * fb.w() + x, ray_dir_color);

@@ -5,4 +5,5 @@ add_library (cs4212-renderlib
   Framebuffer.cpp Framebuffer.h
   Ray.h
   Camera.h PerspectiveCamera.h
+  Shape.h Sphere.h
 )

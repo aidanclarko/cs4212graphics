@@ -24,8 +24,8 @@ TEST_CASE("CONSTRUCTORS") {
 TEST_CASE("Evaluation of Parametric Line ") {
     Ray r;
 
-    r.origin() = vec3(0,0,0);
-    r.direction() = vec3(0,1,0);
+    r.setOrigin(vec3(0,0,0));
+    r.setDirection(vec3(0,1,0));
 
     SECTION("AT 0 RETURN ORIGIN") {
         REQUIRE( isVectorEqual(r.at(0.0), vec3(0,0,0)) );

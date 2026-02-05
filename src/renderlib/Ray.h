@@ -9,8 +9,16 @@ class Ray {
 
     Ray(const point3& origin, const vec3& direction) : orig(origin), dir(direction) {}
 
-     point3& origin()   { return orig; }
-     vec3& direction()  { return dir; }
+     const point3& origin() const { return orig;  }
+     const vec3& direction() const { return dir; }
+
+     void setDirection(const vec3 &d) {
+        dir = d;
+     }
+
+     void setOrigin(const vec3 &o) {
+      orig = o;
+     }
 
      
 

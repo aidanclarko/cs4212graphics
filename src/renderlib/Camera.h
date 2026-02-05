@@ -14,15 +14,20 @@ class Camera {
         Camera(int pixel_nx, int pixel_ny) : 
             pos(0,0,0),
             U(1,0,0), V(0,-1,0), W(0,0,1), 
-            nx(pixel_nx), ny(pixel_ny), focalLength(0.0001), imageplane_height(0.5), imageplane_width(0.5) {}
+            nx(pixel_nx), ny(pixel_ny), focalLength(1.0), imageplane_width(0.5) {
+        
+               float aspect_ratio = (float)nx / (float)ny;
+               float height = imageplane_width / aspect_ratio;
+               imageplane_height = aspect_ratio;
+            }
+
             
         Camera(int pixel_nx, int pixel_ny, point3 eye, vec3 direction, 
-                float imageplane_height, float imageplane_width, float focalLength) :
+                float imageplane_width, float focalLength) :
                 pos(eye),
                 W(unit_vector(-direction)),
                 nx(pixel_nx), ny(pixel_ny),
-                imageplane_height(imageplane_height), 
-                imageplane_width(imageplane_width),
+                imageplane_width(imageplane_width), 
                 focalLength(focalLength) 
             {
                 vec3 t;
@@ -36,6 +41,9 @@ class Camera {
         
                 U = unit_vector(cross(t, W));
                 V = cross(W, U);
+
+                float aspect_ratio = (float)nx / (float)ny;
+                imageplane_height = imageplane_width / aspect_ratio;
             }
 
 

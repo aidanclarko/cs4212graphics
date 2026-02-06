@@ -5,8 +5,7 @@
 #include "Sphere.h"
 #include "test_helpers.h"
 
-TEST_CASE("CONSTRUCTORS") {
-    //JUST ONE CONSTRUCTOR FOR NOW
+TEST_CASE("CONSTRUCTOR") {
 
     Sphere s(point3(0,0,0), 10.0);
 

@@ -1,5 +1,15 @@
 This project uses CMake and vcpkg for managing C++ dependencies.
 
+## IN PROGRESS BUILD
+  ### current progress:
+   render spheres, proper intersection with overlapping spheres, and rough normal shader
+  ## next steps:
+  render triangles ... 
+
+
+things to fix are in issues tab
+
+
 ## Building Using CMake Presets
 
 We have several CMake Build Presets that are outlined in the CMakePresets.json. Some are for building for Release or Debug mode. Running the default setup is just fine too.
@@ -21,14 +31,14 @@ cmake --build .
 This compiles the code and sets up executables defined in the CMakeLists.txt file under each c++ directory. You will need to run build upon new changes made locally.
 
 Your executables will then be in the build folder. They may be in sub-folders depending on the environment.
-### Executable Example (this would run a current unit test on ray class):
+### Executable Example (this would run a current unit test on sphere class):
 ```
   cd buildVCPkg
-  ./utests/utest_ray
+  ./utests/utest_sphere
 
   On Windows Different:
    cd buildVCPkg
-  ./utests/utest_ray.exe
+  ./utests/utest_sphere.exe
 ```
 
 

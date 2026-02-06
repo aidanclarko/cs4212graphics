@@ -7,35 +7,44 @@
 #include <cmath>
 
 int main() {
-    point3 eye = point3(0,-3,0);
-    vec3 direction = vec3(0, 1, -3);
+    point3 eye = point3(0,0,0);
+    vec3 direction = vec3(0,0,-1);
     float focalLength = 1.0;
     float imageplaneWidth = 0.5;
 
-    Framebuffer fb(600, 600);
+    Framebuffer fb(600, 400);
 
     PerspectiveCamera p(fb.w(), fb.h(), eye, direction, imageplaneWidth, focalLength); 
 
-    std::vector<Shape*> shapes = {
-        new Sphere(point3(0,0,-10), 2.0f, vec3(0.23, 0.3, 1.0)),
-        new Sphere(point3(-1, 0, -8.5), 1.0f, vec3(1.0, 0.02, 0.45)),
-        new Sphere(point3(0, 1, -7), 0.5f, vec3(0.45, 0.32, 0.003)),
-        new Sphere(point3(-1, -1, -7), 0.25f, vec3(0, 0, 1.0)),
-        new Sphere(point3(-2, -1, -6), 0.4f, vec3(0, 0, 1.0)),
-        new Sphere(point3(1, -2, -5), 0.23f, vec3(0, 0, 1.0)),
-        
+    std::vector<std::shared_ptr<Shape>> shapes = {
+        std::make_shared<Sphere>(point3(0,0,-10), 2.0f, vec3(0.23, 0.3, 1.0)),
+        std::make_shared<Sphere>(point3(-1, 0, -8.5), 1.0f, vec3(1.0, 0.02, 0.45)),
+        std::make_shared<Sphere>(point3(0, 1, -7), 0.5f, vec3(0.45, 0.32, 0.003)),
+        std::make_shared<Sphere>(point3(-1, -1, -7), 0.25f, vec3(0, 0, 1.0)),
+        std::make_shared<Sphere>(point3(-2, -1, -6), 0.4f, vec3(0, 0, 1.0)),
+        std::make_shared<Sphere>(point3(1, -2, -5), 0.23f, vec3(0, 0, 1.0)),
+        std::make_shared<Sphere>(point3(1, -2, -5), 2.3f, vec3(0, 0, 1.0)),
     };
+    std::shared_ptr<Shape> s = std::make_shared<Sphere>( vec3(0,0,-10), 1.0);
 
     float tmin = 1;
     for(int x= 0; x < fb.w(); x++) {
         for(int y = 0; y < fb.h(); y++) {
-            Shape* shapeClosest = nullptr;
+            std::shared_ptr<Shape> shapeClosest = nullptr;
             float tmax = INFINITY;
-            vec3 color(0,0,0);
+            vec3 color(1,1,1);
             Ray r;
             p.generateRay(x, y, r);
+            
+            // // this is not actual code this was for Japan flag lab 3
+            // if(s->intersect(r, tmin, tmax)) {
+            //     std::cout << "hit" << "\n";
+            //     color = vec3(1,0,0);
+            // }
 
-            for(Shape* s : shapes) {
+            // THIS IS ACTUAL CODE
+
+            for(const auto s : shapes) {
                 if(s->intersect(r, tmin, tmax)) {
                     shapeClosest = s;
                     std::cout << "hit!" << "\n";

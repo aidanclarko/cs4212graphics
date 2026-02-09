@@ -10,11 +10,6 @@ class Sphere : public Shape {
         Sphere() : radius(1.0), center(point3(0,0,0)) {}
         Sphere(point3 center, float radius): radius(radius), center(center) {}
         Sphere(point3 center, float radius, vec3 color): radius(radius), center(center), color(color) {}
-        /*
-            refactoring with the tMin and tMax:
-            IN BASE CLASS
-            bool intersect(const Ray& r, float tmin, float &tmax, HitScruct& hit):        
-        */
 
         const point3& c() const {return center;}
         const float& r() const {return radius;}
@@ -42,7 +37,7 @@ class Sphere : public Shape {
 
         const vec3& getColor() const override { return color; }
 
-        const point3& getCenter() const override {return center;}
+        const point3& getCenter() const {return center;}
 
     private:
         float radius;

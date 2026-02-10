@@ -50,12 +50,13 @@ class Camera {
         ~Camera() {}
 
         virtual void generateRay(int i, int j, Ray &r) = 0;
+        const int& num_samples() { return samples_per_pixel; }
         
     protected:
         vec3 pos;
         vec3 U,V,W;
         int nx, ny;
-
+        int samples_per_pixel = 2;
         float focalLength;
         float imageplane_width, imageplane_height;
 };

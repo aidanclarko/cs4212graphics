@@ -17,7 +17,7 @@ class Sphere : public Shape {
         bool intersect(const Ray& r, const float tmin, float &tmax) override {
             vec3 oc = center - r.origin();
             float a = dot(r.direction(), r.direction());
-            float b =-2.0f * dot(r.direction(), oc);
+            float b = -2.0f * dot(r.direction(), oc);
             float c = dot(oc, oc) - radius * radius;
 
             float discriminant = b * b - 4 * a * c;

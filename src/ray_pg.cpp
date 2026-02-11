@@ -33,27 +33,17 @@ void render( Scene& scene,  Framebuffer& fb, PerspectiveCamera& p ) {
     float tmin = 1;
     for(int x= 0; x < fb.w(); x++) {
         for(int y = 0; y < fb.h(); y++) {
-            vec3 colorAccum(0,0,0);
-            for(int sample = 0; sample < p.num_samples(); sample++ ) {
-                float tmax = INFINITY;
-    
-                float offsetX = random_float();
-                float offsetY = random_float();
+        
+            float tmax = INFINITY;
 
-                std::shared_ptr<Shape> shapeClosest = nullptr;
-                vec3 color = scene.color();
-                Ray r;
+            std::shared_ptr<Shape> shapeClosest = nullptr;
+            vec3 color = scene.color();
+            Ray r;
 
-                p.generateRay(x + offsetX, y + offsetY, r);
-                scene.intersect(r, shapeClosest, color, tmax, tmin);
+            p.generateRay(x  , y , r);
+            scene.intersect(r, shapeClosest, color, tmax, tmin);
 
-                colorAccum += color;
-                // std::cout << colorAccum << "\n";
-            }
-            // std::cout << colorAccum << "\n";
-            colorAccum /= p.num_samples();
-            //this should work but it doesnt ...
-            fb.setPixelColor(y * fb.w() + x, 0.1 * colorAccum);
+            fb.setPixelColor(y * fb.w() + x,  color);
         }
     }
 }

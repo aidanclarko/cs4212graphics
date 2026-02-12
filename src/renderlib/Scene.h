@@ -2,6 +2,7 @@
 #include <vector>
 #include "Shape.h"
 #include "vec3.h"
+#include "Shader.h"
 
 
 class Scene {
@@ -16,15 +17,26 @@ class Scene {
             shapes.push_back(s);
         }
 
-        void intersect(const Ray& r, std::shared_ptr<Shape>& sClosest, vec3& color, float& tmax, float& tmin) {
-            for( const auto s : shapes ) {
-                    if(s->intersect(r, tmin, tmax)) {
-                        sClosest = s;
-                    }
+
+        //this should be computeRayColor();
+
+        vec3 computeRayColor(const Ray& r, float tmin, float tmax, HitStruct& h) {
+            bool hitShape = false;
+
+            for(auto s : shapes) {
+                if(s->intersect(r, tmin, tmax, h)) {
+                    hitShape = true;
                 }
-                if(sClosest != nullptr) {
-                    color = sClosest->getColor();
-                }
+            }
+
+            if(hitShape) {
+                return h.shader->rayColor(h);
+                
+
+            } else {
+                return bgColor;
+            }
+           
         }
 
     private:

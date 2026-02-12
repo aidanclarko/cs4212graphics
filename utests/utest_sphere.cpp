@@ -27,19 +27,22 @@ TEST_CASE("RAY SHOULD HIT SPHERE") {
     SECTION("Ray hits sphere dead center") {
         s = Sphere(point3(0, 0, -10), 1.0);
         r = Ray(point3(0, 0, 0), vec3(0, 0, -1));
-        REQUIRE(s.intersect(r, tmin, tmax) == true);
+        HitStruct h;
+        REQUIRE(s.intersect(r, tmin, tmax, h) == true);
     }
     
     SECTION("Ray starts inside sphere") {
         s = Sphere(point3(0, 0, 0), 5.0); 
         r = Ray(point3(0, 0, 0), vec3(0, 0, -1));
-        REQUIRE(s.intersect(r, tmin, tmax) == true);
+        HitStruct h;
+        REQUIRE(s.intersect(r, tmin, tmax, h) == true);
     }
     
     SECTION("Ray hits sphere off-center") {
         s = Sphere(point3(0, 0, -10), 2.0);
         r = Ray(point3(1, 0, 0), vec3(0, 0, -1));
-        REQUIRE(s.intersect(r, tmin, tmax) == true);
+        HitStruct h;
+        REQUIRE(s.intersect(r, tmin, tmax, h) == true);
     }
 }
 
@@ -52,7 +55,8 @@ TEST_CASE("RAY SHOULD NOT HIT SPHERE") {
      SECTION("Sphere behind camera, ray shoots forward") {
         s = Sphere(point3(0, 0, -10), 5.0);
         r = Ray(point3(0, 0, 0), vec3(0, 0, 10)); 
-        REQUIRE(s.intersect(r, tmin, tmax) == false);
+        HitStruct h;
+        REQUIRE(s.intersect(r, tmin, tmax, h) == false);
     }
 
    
@@ -60,12 +64,14 @@ TEST_CASE("RAY SHOULD NOT HIT SPHERE") {
     SECTION("Ray misses sphere entirely") {
         s = Sphere(point3(0, 0, -10), 0.5);
         r = Ray(point3(0, 0, 0), vec3(1, 0, 0)); 
-        REQUIRE(s.intersect(r, tmin, tmax) == false);
+        HitStruct h;
+        REQUIRE(s.intersect(r, tmin, tmax, h) == false);
     }
     
     SECTION("Ray just misses sphere") {
         s = Sphere(point3(0, 1.1, -10), 1.0); 
         r = Ray(point3(0, 0, 0), vec3(0, 0, -1));
-        REQUIRE(s.intersect(r, tmin, tmax) == false);
+        HitStruct h;
+        REQUIRE(s.intersect(r, tmin, tmax, h) == false);
     }
 }

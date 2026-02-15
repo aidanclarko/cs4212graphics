@@ -2,9 +2,9 @@ This project uses CMake and vcpkg for managing C++ dependencies.
 
 ## IN PROGRESS BUILD
   ### current progress:
-   render spheres and triangles, proper intersection with overlapping spheres, and rough normal shader
+   blinn and lambertian shader works well for spheres
   ## next steps:
-  antialiasing
+  antialiasing, multi light, args
 
 
 things to fix are in issues tab

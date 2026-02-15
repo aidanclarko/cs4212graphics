@@ -2,13 +2,14 @@
 #define TRIANGLE_H
 #include "vec3.h"
 #include "Shape.h"
+#include "HitStruct.h"
 
 class Triangle : public Shape {
     public:
 
         Triangle(point3 A, point3 B, point3 C): A(A), B(B), C(C), color(vec3(1,1,1)) {}
         Triangle(point3 A, point3 B, point3 C, vec3 color): A(A), B(B), C(C), color(color)  {}
-        bool intersect(const Ray& r, const float tmin, float &tmax) override {
+        bool intersect(const Ray& r, const float tmin, float &tmax, HitStruct& hit) override {
             float a = A.x() - B.x();
             float b = A.y() - B.y();
             float c = A.z() - B.z();
@@ -44,9 +45,19 @@ class Triangle : public Shape {
                 return false;
             }
 
-            tmax = t;
-            return true;
+            vec3 edgeOne = B - A;
+            vec3 edgeTwo = C - A;
+            vec3 normal = unit_vector(cross(edgeOne, edgeTwo));
 
+            std::cerr << "Triangle normal: " << normal.x() << ", " 
+          << normal.y() << ", " << normal.z() << std::endl;
+
+            tmax = t;
+            vec3 point = r.at(t);
+            hit.normal = normal;
+            hit.point = point;
+            hit.t = t;
+            return true;
         }
 
         const vec3& getColor() const override { return color; }

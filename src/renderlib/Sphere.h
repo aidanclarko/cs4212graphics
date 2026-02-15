@@ -3,6 +3,7 @@
 #include "Shape.h"
 #include "Ray.h"
 #include "vec3.h"
+#include "HitStruct.h"
 
 
 class Sphere : public Shape {
@@ -14,10 +15,10 @@ class Sphere : public Shape {
         const point3& c() const {return center;}
         const float& r() const {return radius;}
 
-        bool intersect(const Ray& r, const float tmin, float &tmax) override {
+        bool intersect(const Ray& r, const float tmin, float &tmax, HitStruct& h) override {
             vec3 oc = center - r.origin();
             float a = dot(r.direction(), r.direction());
-            float b =-2.0f * dot(r.direction(), oc);
+            float b = -2.0f * dot(r.direction(), oc);
             float c = dot(oc, oc) - radius * radius;
 
             float discriminant = b * b - 4 * a * c;
@@ -32,6 +33,15 @@ class Sphere : public Shape {
                 }
             }
             tmax = t;
+            vec3 point = r.at(t);
+            vec3 normal = unit_vector(point - center);
+
+
+            h.t = t;
+            h.normal = normal;
+            h.point = point;
+
+
             return true;
         }
 

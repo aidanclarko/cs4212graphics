@@ -50,12 +50,13 @@ class Camera {
         ~Camera() {}
 
         virtual void generateRay(int i, int j, Ray &r) = 0;
+
+        point3 getPos() const { return pos; }
         
     protected:
         vec3 pos;
         vec3 U,V,W;
         int nx, ny;
-
         float focalLength;
         float imageplane_width, imageplane_height;
 };

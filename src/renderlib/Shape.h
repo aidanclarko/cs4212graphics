@@ -2,11 +2,12 @@
 #define SHAPE_H
 
 #include "Ray.h"
+#include "HitStruct.h"
 
 //base class
 class Shape {
     public:
-        virtual bool intersect( const Ray& r, const float tmin, float &tmax) = 0;
+        virtual bool intersect( const Ray& r, const float tmin, float &tmax, HitStruct& h) = 0;
         virtual const vec3& getColor() const = 0;
     private:
         vec3 color;

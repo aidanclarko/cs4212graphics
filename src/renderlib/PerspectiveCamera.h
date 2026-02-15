@@ -3,8 +3,6 @@
 #include "Camera.h"
 #include "Ray.h"
 
-//lower focal length for coolness
-
 class PerspectiveCamera : public Camera {
     public:
         PerspectiveCamera() : Camera() {}
@@ -28,6 +26,7 @@ class PerspectiveCamera : public Camera {
             ray.setDirection(direction);
             ray.setOrigin(pos);
         }
+
 };
 
 #endif

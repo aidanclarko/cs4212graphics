@@ -26,6 +26,7 @@ class PerspectiveCamera : public Camera {
             ray.setDirection(direction);
             ray.setOrigin(pos);
         }
+
 };
 
 #endif

@@ -5,6 +5,7 @@
 #include "Triangle.h"
 #include "Scene.h"
 #include "Lambertian.h"
+#include "BlinnPhong.h"
 #include "Light.h"
 #include "render_helpers.h"
 #include "../png++/png.hpp"
@@ -33,12 +34,16 @@ void writeToPNG( Framebuffer& fb, std::string fileName ) {
 
 void render( Scene& scene,  Framebuffer& fb, PerspectiveCamera& p ) {
     float tmin = 1;
+    std::shared_ptr<BlinnPhong> l = std::make_shared<BlinnPhong>(vec3(0.3, 0.3, 0.8), vec3(1, 1, 1), 128.0f);
+    std::shared_ptr<Lambert> lam = std::make_shared<Lambert>();
     for(int x= 0; x < fb.w(); x++) {
         for(int y = 0; y < fb.h(); y++) {
-            std::shared_ptr<Lambert> l = std::make_shared<Lambert>();
 
             Ray r;
-            HitStruct h{  .shader = l };
+            HitStruct h{ 
+                .shader = lam,
+                .cameraPos = p.getPos(),
+            };
 
             p.generateRay(x , y, r);
             vec3 color = scene.computeRayColor(r, 1.0, INFINITY, h);
@@ -55,14 +60,12 @@ int main() {
     float imageplaneWidth = 0.5;
     vec3 bgColor(0.325, 0.659, 0.788);
     Framebuffer fb(200, 200);
-    std::shared_ptr<Light> l =  std::make_shared<Light>(point3(-5,10,0), vec3(0,0,1));
+    std::shared_ptr<Light> l = std::make_shared<Light>(point3(5, 2, -5), vec3(0,1,1));
     PerspectiveCamera p(fb.w(), fb.h(), eye, direction, imageplaneWidth, focalLength); 
     Scene scene(bgColor, l);
 
-
-    //Scene scene(bgColor, l);
-    scene.pushShape(std::make_shared<Sphere>(point3(2, 0, -20), 3.0f)); 
-    scene.pushShape(std::make_shared<Sphere>(point3(-2, 0, -12), 1.0f)); 
+    scene.pushShape(std::make_shared<Sphere>(point3(1,0,-20), 3.0f)); 
+    scene.pushShape(std::make_shared<Sphere>(point3(-2, 1.5, -12), 1.0f)); 
 
     // helper func above
     render(scene, fb, p);

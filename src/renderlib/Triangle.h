@@ -45,9 +45,19 @@ class Triangle : public Shape {
                 return false;
             }
 
-            tmax = t;
-            return true;
+            vec3 edgeOne = B - A;
+            vec3 edgeTwo = C - A;
+            vec3 normal = unit_vector(cross(edgeOne, edgeTwo));
 
+            std::cerr << "Triangle normal: " << normal.x() << ", " 
+          << normal.y() << ", " << normal.z() << std::endl;
+
+            tmax = t;
+            vec3 point = r.at(t);
+            hit.normal = normal;
+            hit.point = point;
+            hit.t = t;
+            return true;
         }
 
         const vec3& getColor() const override { return color; }

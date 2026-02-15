@@ -10,4 +10,5 @@ struct HitStruct {
     std::shared_ptr<Shape> shape;
     std::shared_ptr<Shader> shader;
     vec3 point; 
+    vec3 cameraPos;
 };

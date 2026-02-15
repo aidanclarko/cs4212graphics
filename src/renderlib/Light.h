@@ -12,10 +12,6 @@ class Light {
         void setPoint(vec3 p) {
             point = p;
         }
-
-
-
-
     private:
         point3 point;
         vec3 color;

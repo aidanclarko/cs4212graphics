@@ -12,13 +12,12 @@ class Lambert : public Shader {
 
         vec3 rayColor(HitStruct& h, std::shared_ptr<Light> l) override { 
             vec3 hitPoint = h.point;
-            
-            
+        
             vec3 ldir = unit_vector( l->getPoint() - h.point );
            
             float nDotl = std::fmax(0.0, ( dot(h.normal, ldir)));
 
-            vec3 lambertShade = vec3( nDotl, nDotl, nDotl ) * l->getColor();
+            vec3 lambertShade = h.shapeColor * l->getColor() * nDotl;
             return lambertShade; 
         }
 };

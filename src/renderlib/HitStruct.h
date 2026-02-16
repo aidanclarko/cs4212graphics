@@ -11,4 +11,5 @@ struct HitStruct {
     std::shared_ptr<Shader> shader;
     vec3 point; 
     vec3 cameraPos;
+    vec3 shapeColor;
 };

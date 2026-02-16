@@ -26,23 +26,54 @@ class Scene {
 
         //this should be computeRayColor();
 
+        /*
+            shadows:
+                construct shadow ray <- POINT + t(LIGHT DIR - POINT)
+                CHECK FOR INTERSECTION
+                IF SO THEN DO SOME AMBIENT OCCLUSION TO COLOR
+                OTHERWISE SHOULD BE NORMAL?
+
+                SUBROUTINE
+
+        
+        
+        */
+       bool computeShadow(HitStruct& h) {
+            vec3 ldir = unit_vector( light->getPoint() - h.point );
+            float epsilon = 0.001f;
+            Ray shadow = Ray(h.point + epsilon * h.normal, ldir);
+            float distToLight = (light->getPoint() - h.point).length();
+            HitStruct shadowHit;
+            for(auto s : shapes) {
+                if(s->intersect(shadow, 0.0, distToLight, shadowHit)) {
+                    return true; 
+                }
+
+            }
+            return false;
+            
+       }
+
         vec3 computeRayColor(const Ray& r, float tmin, float tmax, HitStruct& h) {
             bool hitShape = false;
 
             for(auto s : shapes) {
                 if(s->intersect(r, tmin, tmax, h)) {
+                    h.shapeColor = s->getColor();
                     hitShape = true;
                 }
             }
 
             if(hitShape) {
+                if(computeShadow(h)) {
+                    return h.shapeColor * vec3(0.1, 0.1, 0.1);
+                }
                 return h.shader->rayColor(h, light);
                 
 
             } else {
                 return bgColor;
             }
-           
         }
 
     private:

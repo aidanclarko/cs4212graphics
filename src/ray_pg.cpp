@@ -34,14 +34,14 @@ void writeToPNG( Framebuffer& fb, std::string fileName ) {
 
 void render( Scene& scene,  Framebuffer& fb, PerspectiveCamera& p ) {
     float tmin = 1;
-    std::shared_ptr<BlinnPhong> l = std::make_shared<BlinnPhong>(vec3(0.3, 0.3, 0.8), vec3(1, 1, 1), 128.0f);
+    std::shared_ptr<BlinnPhong> l = std::make_shared<BlinnPhong>(vec3(1, 1, 1), vec3(1, 1, 1), 128.0f);
     std::shared_ptr<Lambert> lam = std::make_shared<Lambert>();
     for(int x= 0; x < fb.w(); x++) {
         for(int y = 0; y < fb.h(); y++) {
 
             Ray r;
             HitStruct h{ 
-                .shader = lam,
+                .shader = l,
                 .cameraPos = p.getPos(),
             };
 
@@ -54,18 +54,27 @@ void render( Scene& scene,  Framebuffer& fb, PerspectiveCamera& p ) {
 
 
 int main() {
-    point3 eye = point3(0,0,0);
-    vec3 direction = vec3(0,0,-1);
+    point3 eye = point3(0, 5, -10);        
+    vec3 direction = vec3(0, -0.0888, -0.2);
     float focalLength = 1.0;
-    float imageplaneWidth = 0.5;
+    float imageplaneWidth = 1.0;
     vec3 bgColor(0.325, 0.659, 0.788);
-    Framebuffer fb(200, 200);
-    std::shared_ptr<Light> l = std::make_shared<Light>(point3(5, 2, -5), vec3(0,1,1));
+    Framebuffer fb(400, 400);
+    std::shared_ptr<Light> l = std::make_shared<Light>(point3(10, 9, -5), vec3(1,1,1));
     PerspectiveCamera p(fb.w(), fb.h(), eye, direction, imageplaneWidth, focalLength); 
     Scene scene(bgColor, l);
 
-    scene.pushShape(std::make_shared<Sphere>(point3(1,0,-20), 3.0f)); 
-    scene.pushShape(std::make_shared<Sphere>(point3(-2, 1.5, -12), 1.0f)); 
+    // ground sphere 
+    scene.pushShape(std::make_shared<Sphere>(point3(0, -1000, -10), 995.0f, vec3(0.184, 0.929, 0.294)));
+    
+    scene.pushShape(std::make_shared<Sphere>(point3(0, -1, -25), 4, vec3(0.08, 0.91, 0.84)));
+    
+    scene.pushShape(std::make_shared<Sphere>(point3(2, 1, -15), 0.8f, vec3(1, 0.58, 0.157)));
+    scene.pushShape(std::make_shared<Sphere>(point3(2.5, 2, -22), 1.8f, vec3(1, 0.58, 0.157)));
+    
+    scene.pushShape(std::make_shared<Sphere>(point3(-6, 3, -30), 1.0f, vec3(0.08, 0.91, 0.84)));
+    scene.pushShape(std::make_shared<Sphere>(point3(7, 1, -32), 1.3f, vec3(1, 0.58, 0.157)));
+    
 
     // helper func above
     render(scene, fb, p);

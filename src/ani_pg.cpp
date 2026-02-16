@@ -12,6 +12,12 @@
 #include "PerspectiveCamera.h"
 #include <cmath>
 
+/*
+
+ ffmpeg -r 30 -f image2 -pattern_type glob -i "*.png" -vcodec libx264 -pix_fmt yuv420p output.mp4
+
+*/
+
 void writeToPNG( Framebuffer& fb, std::string fileName) {
     png::image< png::rgb_pixel > pngOne( fb.w(), fb.h() );
     std::vector<vec3> storage = fb.getStorage();

@@ -38,10 +38,11 @@ class Scene {
         
         
         */
+       // make more efficient
        bool computeShadow(HitStruct& h) {
             vec3 ldir = unit_vector( light->getPoint() - h.point );
             float epsilon = 0.001f;
-            Ray shadow = Ray(h.point + epsilon * h.normal, ldir);
+            Ray shadow = Ray(h.point + epsilon  * h.normal, ldir);
             float distToLight = (light->getPoint() - h.point).length();
             HitStruct shadowHit;
             for(auto s : shapes) {

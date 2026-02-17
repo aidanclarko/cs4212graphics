@@ -41,7 +41,7 @@ void render( Scene& scene,  Framebuffer& fb, PerspectiveCamera& p ) {
 
             Ray r;
             HitStruct h{ 
-                .shader = l,
+                .shader = lam,
                 .cameraPos = p.getPos(),
             };
 
@@ -54,7 +54,7 @@ void render( Scene& scene,  Framebuffer& fb, PerspectiveCamera& p ) {
 
 
 int main() {
-    point3 eye = point3(0, 5, -10);        
+    point3 eye = point3(0, 5, 0);
     vec3 direction = vec3(0, -0.0888, -0.2);
     float focalLength = 1.0;
     float imageplaneWidth = 1.0;
@@ -66,12 +66,12 @@ int main() {
 
     // ground sphere 
     scene.pushShape(std::make_shared<Sphere>(point3(0, -1000, -10), 995.0f, vec3(0.184, 0.929, 0.294)));
-    
+
     scene.pushShape(std::make_shared<Sphere>(point3(0, -1, -25), 4, vec3(0.08, 0.91, 0.84)));
-    
+
     scene.pushShape(std::make_shared<Sphere>(point3(2, 1, -15), 0.8f, vec3(1, 0.58, 0.157)));
     scene.pushShape(std::make_shared<Sphere>(point3(2.5, 2, -22), 1.8f, vec3(1, 0.58, 0.157)));
-    
+
     scene.pushShape(std::make_shared<Sphere>(point3(-6, 3, -30), 1.0f, vec3(0.08, 0.91, 0.84)));
     scene.pushShape(std::make_shared<Sphere>(point3(7, 1, -32), 1.3f, vec3(1, 0.58, 0.157)));
     

@@ -49,7 +49,7 @@ class Camera {
 
         ~Camera() {}
 
-        virtual void generateRay(int i, int j, Ray &r) = 0;
+        virtual void generateRay(float i, float j, Ray &r) = 0;
 
         point3 getPos() const { return pos; }
         

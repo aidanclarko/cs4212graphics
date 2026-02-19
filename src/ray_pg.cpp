@@ -12,6 +12,24 @@
 #include "PerspectiveCamera.h"
 #include <cmath>
 
+void fibboSphere(int n, Scene& s) {
+    float goldenAngle = M_PI * (3.0f - sqrt(5.0f));
+    float orbitRadius = 15.0f; 
+    float sphereRadius = 0.5f;  
+
+    for (int i = 0; i < n; i++) {
+        float y = 1.0f - (i / float(n - 1)) * 2.0f;
+        float r = sqrt(1.0f - y * y);
+        float theta = goldenAngle * i;
+
+        float x = cos(theta) * r * orbitRadius;
+        float fz = sin(theta) * r * orbitRadius;
+        float fy = y * orbitRadius;
+
+        s.pushShape(std::make_shared<Sphere>(vec3(x, fy, fz), sphereRadius, vec3(1, 0, 0)));
+    }
+}
+
 void writeToPNG( Framebuffer& fb, std::string fileName ) {
     png::image< png::rgb_pixel > pngOne( fb.w(), fb.h() );
     std::vector<vec3> storage = fb.getStorage();
@@ -54,8 +72,8 @@ void render( Scene& scene,  Framebuffer& fb, PerspectiveCamera& p ) {
 
 
 int main() {
-    point3 eye = point3(0, 5, 0);
-    vec3 direction = vec3(0, -0.0888, -0.2);
+    point3 eye = point3(0, 0, 50);
+    vec3 direction = vec3(0, 0, -1);
     float focalLength = 1.0;
     float imageplaneWidth = 1.0;
     vec3 bgColor(0.325, 0.659, 0.788);
@@ -64,16 +82,18 @@ int main() {
     PerspectiveCamera p(fb.w(), fb.h(), eye, direction, imageplaneWidth, focalLength); 
     Scene scene(bgColor, l);
 
-    // ground sphere 
-    scene.pushShape(std::make_shared<Sphere>(point3(0, -1000, -10), 995.0f, vec3(0.184, 0.929, 0.294)));
+    // // ground sphere 
+    // scene.pushShape(std::make_shared<Sphere>(point3(0, -1000, -10), 995.0f, vec3(0.184, 0.929, 0.294)));
 
-    scene.pushShape(std::make_shared<Sphere>(point3(0, -1, -25), 4, vec3(0.08, 0.91, 0.84)));
+    // scene.pushShape(std::make_shared<Sphere>(point3(0, -1, -25), 4, vec3(0.08, 0.91, 0.84)));
 
-    scene.pushShape(std::make_shared<Sphere>(point3(2, 1, -15), 0.8f, vec3(1, 0.58, 0.157)));
-    scene.pushShape(std::make_shared<Sphere>(point3(2.5, 2, -22), 1.8f, vec3(1, 0.58, 0.157)));
+    // scene.pushShape(std::make_shared<Sphere>(point3(2, 1, -15), 0.8f, vec3(1, 0.58, 0.157)));
+    // scene.pushShape(std::make_shared<Sphere>(point3(2.5, 2, -22), 1.8f, vec3(1, 0.58, 0.157)));
 
-    scene.pushShape(std::make_shared<Sphere>(point3(-6, 3, -30), 1.0f, vec3(0.08, 0.91, 0.84)));
-    scene.pushShape(std::make_shared<Sphere>(point3(7, 1, -32), 1.3f, vec3(1, 0.58, 0.157)));
+    // scene.pushShape(std::make_shared<Sphere>(point3(-6, 3, -30), 1.0f, vec3(0.08, 0.91, 0.84)));
+    // scene.pushShape(std::make_shared<Sphere>(point3(7, 1, -32), 1.3f, vec3(1, 0.58, 0.157)));
+
+    fibboSphere(1000, scene);
     
 
     // helper func above

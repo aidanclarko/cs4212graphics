@@ -1,6 +1,8 @@
 #ifndef SPHERE_H
 #define SPHERE_H
+#include <memory>
 #include "Shape.h"
+#include "Shader.h"
 #include "Ray.h"
 #include "vec3.h"
 #include "HitStruct.h"
@@ -11,6 +13,7 @@ class Sphere : public Shape {
         Sphere() : radius(1.0), center(point3(0,0,0)) {}
         Sphere(point3 center, float radius): radius(radius), center(center) {}
         Sphere(point3 center, float radius, vec3 color): radius(radius), center(center), color(color) {}
+        Sphere(point3 center, float radius, vec3 color, std::shared_ptr<Shader> sh): radius(radius), center(center), color(color), shader(sh) {}
 
         const point3& c() const {return center;}
         const float& r() const {return radius;}
@@ -36,7 +39,8 @@ class Sphere : public Shape {
             vec3 point = r.at(t);
             vec3 normal = unit_vector(point - center);
 
-
+            h.shader = this->shader;
+            h.incomingRay = r;
             h.t = t;
             h.normal = normal;
             h.point = point;
@@ -53,6 +57,7 @@ class Sphere : public Shape {
         float radius;
         point3 center;
         vec3 color;
+        std::shared_ptr<Shader> shader;
 
 };
 #endif

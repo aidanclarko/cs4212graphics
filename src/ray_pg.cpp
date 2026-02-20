@@ -6,6 +6,7 @@
 #include "Scene.h"
 #include "Lambertian.h"
 #include "BlinnPhong.h"
+#include "Mirror.h"
 #include "Light.h"
 #include "render_helpers.h"
 #include "../png++/png.hpp"
@@ -51,9 +52,7 @@ void writeToPNG( Framebuffer& fb, std::string fileName ) {
 
 
 void render( Scene& scene,  Framebuffer& fb, PerspectiveCamera& persCam ) {
-    float rpp_NSquare = 10;
-    std::shared_ptr<BlinnPhong> l = std::make_shared<BlinnPhong>(vec3(1, 1, 1), vec3(1, 1, 1), 128.0f);
-    std::shared_ptr<Lambert> lam = std::make_shared<Lambert>();
+    float rpp_NSquare = 4;
     vec3 c(0.0,0.0,0.0);
 
     for(int x= 0; x < fb.w(); x++) {
@@ -65,7 +64,6 @@ void render( Scene& scene,  Framebuffer& fb, PerspectiveCamera& persCam ) {
 
                     Ray r;
                     HitStruct h{ 
-                        .shader = lam,
                         .cameraPos = persCam.getPos(),
                     };
 
@@ -73,7 +71,7 @@ void render( Scene& scene,  Framebuffer& fb, PerspectiveCamera& persCam ) {
                     float qOffset = (q + random_float()) /rpp_NSquare;
 
                     persCam.generateRay(x + pOffset , y + qOffset, r);
-                    c += scene.computeRayColor(r, 1.0, INFINITY, h);
+                    c += scene.computeRayColor(r, 1.0, INFINITY, h, 5);
                     
 
                 }
@@ -93,20 +91,20 @@ int main() {
     float imageplaneWidth = 1.0;
     vec3 bgColor(0.325, 0.659, 0.788);
     Framebuffer fb(600, 600);
-    std::shared_ptr<Light> l = std::make_shared<Light>(point3(10, 9, -5), vec3(1,1,1));
+    std::shared_ptr<Light> l = std::make_shared<Light>(point3(3, 12, -5), vec3(1,1,1));
     PerspectiveCamera persCam(fb.w(), fb.h(), eye, direction, imageplaneWidth, focalLength); 
     Scene scene(bgColor, l);
 
-    // // ground sphere 
-    scene.pushShape(std::make_shared<Sphere>(point3(0, -1000, -10), 995.0f, vec3(0.184, 0.929, 0.294)));
+    // shaders
+    std::shared_ptr<BlinnPhong> bf = std::make_shared<BlinnPhong>(vec3(1, 1, 1), vec3(1, 1, 1), 128.0f);
+    std::shared_ptr<Lambert> lam = std::make_shared<Lambert>();
+    std::shared_ptr<Mirror> mi = std::make_shared<Mirror>(scene);
 
-    scene.pushShape(std::make_shared<Sphere>(point3(0, -1, -25), 4, vec3(0.08, 0.91, 0.84)));
-
-    scene.pushShape(std::make_shared<Sphere>(point3(2, 1, -15), 0.8f, vec3(1, 0.58, 0.157)));
-    scene.pushShape(std::make_shared<Sphere>(point3(2.5, 2, -22), 1.8f, vec3(1, 0.58, 0.157)));
-
-    scene.pushShape(std::make_shared<Sphere>(point3(-6, 3, -30), 1.0f, vec3(0.08, 0.91, 0.84)));
-    scene.pushShape(std::make_shared<Sphere>(point3(7, 1, -32), 1.3f, vec3(1, 0.58, 0.157)));
+    // ground sphere 
+    scene.pushShape(std::make_shared<Sphere>(point3(0, -1000, -10), 995.0f, vec3(0.184, 0.929, 0.294), lam));
+    scene.pushShape(std::make_shared<Sphere>(point3(-4, 2, -25), 4, vec3(0.08, 0.91, 0.84), mi));
+    scene.pushShape(std::make_shared<Sphere>(point3(3, 2, -30), 1.8f, vec3(1, 0.58, 0.157), lam));
+    scene.pushShape(std::make_shared<Sphere>(point3(9, 1, -35), 1.3f, vec3(1, 0.58, 0.157), mi));
 
     // fibboSphere(1000, scene);
     
@@ -116,4 +114,4 @@ int main() {
 
     //export to png
     writeToPNG(fb, "ray.png");
-}
+}3,

@@ -114,4 +114,4 @@ int main() {
 
     //export to png
     writeToPNG(fb, "ray.png");
-}3,
+}

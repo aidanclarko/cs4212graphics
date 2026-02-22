@@ -2,9 +2,9 @@ This project uses CMake and vcpkg for managing C++ dependencies.
 
 ## IN PROGRESS BUILD
   ### current progress:
-   blinn and lambertian shader works well for spheres
+   mirror and anti aliasing
   ## next steps:
-  antialiasing, multi light, args
+  multiple lights, args
 
 
 things to fix are in issues tab

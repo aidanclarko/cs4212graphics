@@ -16,7 +16,13 @@ class Lambert : public Shader {
            
             float nDotl = std::fmax(0.0, ( dot(h.normal, ldir)));
 
-            vec3 lambertShade = h.shapeColor * l->getColor() * nDotl;
+            vec3 lambertShade;
+
+            if(computeShadow(h)) {
+                lambertShade = h.shapeColor * vec3(0.1, 0.1, 0.1);
+            } else {
+                lambertShade = h.shapeColor * l->getColor() * nDotl;
+            }
             return lambertShade; 
         }
 };

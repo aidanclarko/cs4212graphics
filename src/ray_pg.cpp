@@ -51,7 +51,7 @@ void writeToPNG( Framebuffer& fb, std::string fileName ) {
 }
 
 
-void render( Scene& scene,  Framebuffer& fb, PerspectiveCamera& persCam ) {
+void render( std::shared_ptr<Scene> scene,  Framebuffer& fb, PerspectiveCamera& persCam ) {
     float rpp_NSquare = 4;
     vec3 c(0.0,0.0,0.0);
 
@@ -65,13 +65,14 @@ void render( Scene& scene,  Framebuffer& fb, PerspectiveCamera& persCam ) {
                     Ray r;
                     HitStruct h{ 
                         .cameraPos = persCam.getPos(),
+                        .scene = scene
                     };
 
                     float pOffset = (p + random_float()) /rpp_NSquare;
                     float qOffset = (q + random_float()) /rpp_NSquare;
 
                     persCam.generateRay(x + pOffset , y + qOffset, r);
-                    c += scene.computeRayColor(r, 1.0, INFINITY, h, 5);
+                    c += scene->computeRayColor(r, 1.0, INFINITY, h, 10);
                     
 
                 }
@@ -85,28 +86,30 @@ void render( Scene& scene,  Framebuffer& fb, PerspectiveCamera& persCam ) {
 
 
 int main() {
-    point3 eye = point3(0, 0, -5);
+    point3 eye = point3(0, 5, -1);
     vec3 direction = vec3(0, 0, -1);
     float focalLength = 1.0;
     float imageplaneWidth = 1.0;
     vec3 bgColor(0.325, 0.659, 0.788);
     Framebuffer fb(600, 600);
-    std::shared_ptr<Light> l = std::make_shared<Light>(point3(3, 12, -5), vec3(1,1,1));
+    std::shared_ptr<Light> l = std::make_shared<Light>(point3(3, 12, 5), vec3(1,1,1));
+
     PerspectiveCamera persCam(fb.w(), fb.h(), eye, direction, imageplaneWidth, focalLength); 
-    Scene scene(bgColor, l);
+    std::shared_ptr<Scene> scene = std::make_shared<Scene>(bgColor, l);
 
     // shaders
     std::shared_ptr<BlinnPhong> bf = std::make_shared<BlinnPhong>(vec3(1, 1, 1), vec3(1, 1, 1), 128.0f);
     std::shared_ptr<Lambert> lam = std::make_shared<Lambert>();
-    std::shared_ptr<Mirror> mi = std::make_shared<Mirror>(scene);
+    std::shared_ptr<Mirror> mi = std::make_shared<Mirror>();
 
     // ground sphere 
-    scene.pushShape(std::make_shared<Sphere>(point3(0, -1000, -10), 995.0f, vec3(0.184, 0.929, 0.294), lam));
-    scene.pushShape(std::make_shared<Sphere>(point3(-4, 2, -25), 4, vec3(0.08, 0.91, 0.84), mi));
-    scene.pushShape(std::make_shared<Sphere>(point3(3, 2, -30), 1.8f, vec3(1, 0.58, 0.157), lam));
-    scene.pushShape(std::make_shared<Sphere>(point3(9, 1, -35), 1.3f, vec3(1, 0.58, 0.157), mi));
+    scene->pushShape(std::make_shared<Sphere>(point3(0, -1000, -10), 995.0f, vec3(0.184, 0.929, 0.294), lam));
+    scene->pushShape(std::make_shared<Sphere>(point3(-4, 2, -20), 4, vec3(0.08, 0.91, 0.84), mi));
+    // scene.pushShape(std::make_shared<Triangle>(vec3(0, 0, -7), vec3(2, 0, -7), vec3(1, 2, -7), vec3(1, 0.58, 0.157), mi));
+    scene->pushShape(std::make_shared<Sphere>(point3(3, 2, -30), 1.8f, vec3(1, 0.58, 0.157), bf));
+    scene->pushShape(std::make_shared<Sphere>(point3(9, 1, -25), 1.3f, vec3(1, 0.58, 0.157), mi));
 
-    // fibboSphere(1000, scene);
+
     
 
     // helper func above

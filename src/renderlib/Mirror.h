@@ -5,16 +5,16 @@
 #include "Ray.h"
 
 class Mirror : public Shader {
-    Scene& scene;
+
     public:
-        Mirror(Scene& scene) : scene(scene) {}
+        Mirror() {}
 
         vec3 rayColor(HitStruct& h, std::shared_ptr<Light> l, int depth) override {
             vec3 d = h.incomingRay.direction();
             vec3 reflect = d - 2.0 * dot(d, h.normal) * h.normal;
 
-            Ray reflected(h.point + 0.001f * h.normal, reflect);
-            return scene.computeRayColor(reflected, 1.0, INFINITY, h,  depth);
+            Ray reflected(h.point + 0.01f * h.normal, reflect);
+        
+            return h.scene->computeRayColor(reflected, 0.01, INFINITY, h,  depth);
         }
-
 };

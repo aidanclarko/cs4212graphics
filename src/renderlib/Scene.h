@@ -21,7 +21,9 @@ class Scene {
 
         void pushLight(std::shared_ptr<Light> l) { lights.push_back(l); }
 
-        bool computeShadow(HitStruct& h);
+        std::shared_ptr<Light> getLight() { return light; }
+        std::vector<std::shared_ptr<Shape>> getShapes() { return shapes; }
+
 
         vec3 computeRayColor(const Ray& r, float tmin, float tmax, HitStruct& h, int depth);
 

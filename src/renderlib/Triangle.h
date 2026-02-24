@@ -3,12 +3,14 @@
 #include "vec3.h"
 #include "Shape.h"
 #include "HitStruct.h"
+#include "Shader.h"
 
 class Triangle : public Shape {
     public:
 
         Triangle(point3 A, point3 B, point3 C): A(A), B(B), C(C), color(vec3(1,1,1)) {}
         Triangle(point3 A, point3 B, point3 C, vec3 color): A(A), B(B), C(C), color(color)  {}
+        Triangle(point3 A, point3 B, point3 C, vec3 color, std::shared_ptr<Shader> s): A(A), B(B), C(C), color(color), shader(s)  {}
         bool intersect(const Ray& r, const float tmin, float &tmax, HitStruct& hit) override {
             float a = A.x() - B.x();
             float b = A.y() - B.y();
@@ -49,14 +51,15 @@ class Triangle : public Shape {
             vec3 edgeTwo = C - A;
             vec3 normal = unit_vector(cross(edgeOne, edgeTwo));
 
-            std::cerr << "Triangle normal: " << normal.x() << ", " 
-          << normal.y() << ", " << normal.z() << std::endl;
 
             tmax = t;
             vec3 point = r.at(t);
+
+            hit.shader = this->shader;
+            hit.incomingRay = r;
+            hit.t = t;
             hit.normal = normal;
             hit.point = point;
-            hit.t = t;
             return true;
         }
 
@@ -67,6 +70,7 @@ class Triangle : public Shape {
         point3 B;
         point3 C;
         vec3 color;
+        std::shared_ptr<Shader> shader;
 };
 
 #endif

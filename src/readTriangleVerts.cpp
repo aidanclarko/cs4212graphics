@@ -148,5 +148,5 @@ int main(int argc, char* argv[])
     std::chrono::steady_clock::time_point end_time = std::chrono::steady_clock::now();
 
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-    std::cout << "Code executed in: " << ms.count() << " seconds." << std::endl;
+    std::cout << "Code executed in: " << ms.count() << " milliseconds." << std::endl;
 }

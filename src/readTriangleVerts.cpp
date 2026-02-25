@@ -15,6 +15,8 @@
 #include "../png++/png.hpp"
 #include "PerspectiveCamera.h"
 #include <cmath>
+#include <chrono>
+
 
 void readFloatsFromFile(const std::string& filename, std::vector<float> &allFloats)
 {
@@ -56,11 +58,11 @@ void writeToPNG( Framebuffer& fb, std::string fileName ) {
 }
 
 void render( std::shared_ptr<Scene> scene,  Framebuffer& fb, PerspectiveCamera& persCam ) {
-    float rpp_NSquare = 4;
-    vec3 c(0.0,0.0,0.0);
+    float rpp_NSquare = 1;
 
     for(int x= 0; x < fb.w(); x++) {
         for(int y = 0; y < fb.h(); y++) {
+            vec3 c(0.0,0.0,0.0);
 
             //antialiasing
             for(int p = 0; p < rpp_NSquare; p++) {
@@ -102,16 +104,17 @@ int main(int argc, char* argv[])
     std::cout << "Interpreted as Triangles: " << numTriangles << std::endl;
 
 
-    point3 eye = point3(0, 0, 0);
+    point3 eye = point3(0, 0, 2);
     vec3 direction = vec3(0, 0, -1);
     float focalLength = 1.0;
     float imageplaneWidth = 1.0;
     vec3 bgColor(0.325, 0.659, 0.788);
-    Framebuffer fb(200, 200);
+    Framebuffer fb(100, 100);
     std::shared_ptr<Light> l = std::make_shared<Light>(point3(3, 12, 5), vec3(1,1,1));
 
     PerspectiveCamera persCam(fb.w(), fb.h(), eye, direction, imageplaneWidth, focalLength); 
     std::shared_ptr<Scene> scene = std::make_shared<Scene>(bgColor, l);
+    std::shared_ptr<Lambert> lam = std::make_shared<Lambert>();
 
     for(int i = 0; i < allFloats.size(); i+=9) {
         float a1 = allFloats[i];
@@ -130,16 +133,20 @@ int main(int argc, char* argv[])
         vec3 C(c1, c2, c3);
         
 
-        std::shared_ptr<Triangle> t = std::make_shared<Triangle>(A, B, C);
+        std::shared_ptr<Triangle> t = std::make_shared<Triangle>(A, B, C, vec3(1,0,0), lam);
         scene->pushShape(t);
     }
 
-    // shaders
-    std::shared_ptr<Lambert> lam = std::make_shared<Lambert>();
-
     // helper func above
+    std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
+    
     render(scene, fb, persCam);
 
     //export to png
     writeToPNG(fb, "triangleTest.png");
+
+    std::chrono::steady_clock::time_point end_time = std::chrono::steady_clock::now();
+
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+    std::cout << "Code executed in: " << ms.count() << " seconds." << std::endl;
 }

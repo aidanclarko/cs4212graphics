@@ -68,8 +68,9 @@ void render( std::shared_ptr<Scene> scene,  Framebuffer& fb, PerspectiveCamera& 
 
                     Ray r;
                     HitStruct h{ 
-                        .cameraPos = persCam.getPos(),
-                        .scene = scene
+                        .scene = scene,
+                        .cameraPos = persCam.getPos()
+                        
                     };
 
                     float pOffset = (p + random_float()) /rpp_NSquare;

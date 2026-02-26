@@ -18,9 +18,8 @@ class Shader {
             std::shared_ptr<Light> light = h.scene->getLight();
             
             vec3 ldir = unit_vector(light->getPoint() - h.point);
-            //lower after this 
-            float epsilon = 0.3f;
-            Ray shadow = Ray(h.point + epsilon * h.normal, ldir);
+            float epsilon = 1e-4f;
+            Ray shadow = Ray(h.point + vec3(epsilon, epsilon, epsilon), ldir);
             float distToLight = (light->getPoint() - h.point).length();
             HitStruct shadowHit;
             for(auto s : h.scene->getShapes()) {
@@ -30,6 +29,7 @@ class Shader {
             }
             return false;
         }
+
         virtual vec3 rayColor(HitStruct& h,  std::shared_ptr<Light> l, int depth) = 0;
 
     private:

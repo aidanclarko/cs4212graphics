@@ -58,9 +58,11 @@ void writeToPNG( Framebuffer& fb, std::string fileName ) {
 }
 
 void render( std::shared_ptr<Scene> scene,  Framebuffer& fb, PerspectiveCamera& persCam ) {
-    float rpp_NSquare = 1;
+    float rpp_NSquare = 2;
 
+    #pragma omp parallel for schedule(dynamic)
     for(int x= 0; x < fb.w(); x++) {
+        #pragma omp critical
         std::cout << "row :" << x << " completed \n";
         for(int y = 0; y < fb.h(); y++) {
             vec3 c(0.0,0.0,0.0);
@@ -105,13 +107,13 @@ int main(int argc, char* argv[])
     std::cout << "Interpreted as Triangles: " << numTriangles << std::endl;
 
 
-    point3 eye = point3(0, 0, 5);
+    point3 eye = point3(0, 0, 4);
     vec3 direction = vec3(0, 0, -1);
     float focalLength = 1.0;
     float imageplaneWidth = 1.0;
     vec3 bgColor(0.325, 0.659, 0.788);
-    Framebuffer fb(50, 50);
-    std::shared_ptr<Light> l = std::make_shared<Light>(point3(0, 0, 2), vec3(1,1,1));
+    Framebuffer fb(600, 600);
+    std::shared_ptr<Light> l = std::make_shared<Light>(point3(2, 5, 2), vec3(1,1,1));
 
     PerspectiveCamera persCam(fb.w(), fb.h(), eye, direction, imageplaneWidth, focalLength); 
     std::shared_ptr<Scene> scene = std::make_shared<Scene>(bgColor, l);

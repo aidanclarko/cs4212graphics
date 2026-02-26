@@ -18,7 +18,8 @@ class Shader {
             std::shared_ptr<Light> light = h.scene->getLight();
             
             vec3 ldir = unit_vector(light->getPoint() - h.point);
-            float epsilon = 0.01f;
+            //lower after this 
+            float epsilon = 0.3f;
             Ray shadow = Ray(h.point + epsilon * h.normal, ldir);
             float distToLight = (light->getPoint() - h.point).length();
             HitStruct shadowHit;

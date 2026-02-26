@@ -28,7 +28,7 @@ GraphicsArgs::GraphicsArgs()
   : verbose(false),
     windowWidth( default_WindowSize ), windowHeight( default_WindowSize ),
     width( default_WindowSize ), height( default_WindowSize ), 
-    aspectRatio(1.0), useShadow(true), bgColor(0.0, 0.0, 0.0),
+    aspectRatio(1.0), useShadow(true),
     useDepthOfField(false),
     depthOfFieldDistance(0),
     numCpus(1), rpp(1), 
@@ -49,6 +49,7 @@ GraphicsArgs::GraphicsArgs()
   reg("split", "split method for bvh construction (default is objectMedian)", ArgumentParsing::STRING, 's');
   reg("winwidth", "width of window (if using preview)", ArgumentParsing::INT, 'x');
   reg("winheight", "height of window (if using preview)", ArgumentParsing::INT, 'y');
+  reg("bgcolor", "background color specified as three floats for R G B, example: \"0.5 0.25 0.125\"", ArgumentParsing::STRING, 'b');
 }
 
 void GraphicsArgs::process(int argc, char *argv[])
@@ -105,5 +106,11 @@ void GraphicsArgs::process(int argc, char *argv[])
   
   isSet("outputfile", outputFileName);
   if (verbose) { std::cout << "Setting outputFileName to " << outputFileName << std::endl; }
+
+  std::string bgColorString;
+  if (isSet("bgcolor", bgColorString)) {
+      std::istringstream ss(bgColorString);
+      ss >> bgColor[0] >> bgColor[1] >> bgColor[2];
+  }
 }
 

@@ -7,9 +7,9 @@ add_library (cs4212-util
   model_obj.cpp model_obj.h
 )
 add_executable(
-  ray_pg ray_pg.cpp
+  render_main render_main.cpp
 )
-target_link_libraries(ray_pg PNG::PNG cs4212-renderlib cs4212-util)
+target_link_libraries(render_main PNG::PNG cs4212-renderlib cs4212-util)
 target_compile_definitions(cs4212-util PUBLIC HAS_GLM)
 target_link_libraries(cs4212-util PRIVATE Boost::program_options)
 target_link_libraries(cs4212-util PUBLIC glm::glm)

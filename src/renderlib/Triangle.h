@@ -27,7 +27,7 @@ class Triangle : public Shape {
 
             float M = a * ((e* i) - (h * f)) + b * ((g * f) - (d * i)) + c * ((d * h) - (e * g));
 
-            float t = std::fabs((f * ((a * k) - (j * b)) + e * ((j * c) - (a * l)) + d * ((b * l) - (k * c))) / M);
+            float t = -((f * ((a * k) - (j * b)) + e * ((j * c) - (a * l)) + d * ((b * l) - (k * c))) / M);
 
 
             if (t < tmin || t > tmax) {

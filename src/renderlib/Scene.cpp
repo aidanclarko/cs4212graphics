@@ -16,8 +16,9 @@ vec3 Scene::computeRayColor(const Ray& r, float tmin, float tmax, HitStruct& h, 
             hitShape = true;
         }
     }
+    
     if(hitShape) {
-        return h.shader->rayColor(h, light, depth - 1);
+        return h.shader->rayColor(h, lights, depth - 1);
     }
     return bgColor;
 }

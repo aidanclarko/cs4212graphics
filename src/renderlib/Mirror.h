@@ -9,7 +9,7 @@ class Mirror : public Shader {
     public:
         Mirror() {}
 
-        vec3 rayColor(HitStruct& h, std::shared_ptr<Light> l, int depth) override {
+        vec3 rayColor(HitStruct& h, std::vector<std::shared_ptr<Light>> lights, int depth) override {
             vec3 d = h.incomingRay.direction();
             vec3 reflect = d - 2.0 * dot(d, h.normal) * h.normal;
 

@@ -43,6 +43,7 @@ class RayRender {
                     c = c / (rpp_NSquare * rpp_NSquare);
 
                     fb.setPixelColor(y * fb.w() + x,  c);
+                    c = vec3(0.0, 0.0, 0.0);
                 }
             }
         }

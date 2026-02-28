@@ -2,12 +2,19 @@ This project uses CMake and vcpkg for managing C++ dependencies.
 
 ## IN PROGRESS BUILD
   ### current progress:
-   mirror and anti aliasing
+   bronze level completed
   ## next steps:
-  multiple lights, args
+  diffuse? obj reader?
 
 
 things to fix are in issues tab
+
+## To run and test my bronze level:
+cd buildVCPkg/
+cmake --build .
+./src/render_main
+
+-w, -h, -b are allowed as args in command line, by default background color is white, and size is 100x100
 
 
 ## Building Using CMake Presets

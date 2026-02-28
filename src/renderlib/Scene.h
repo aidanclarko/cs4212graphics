@@ -13,7 +13,6 @@ class Scene {
 
         Scene() : bgColor( vec3(0,0,0)) {}
         Scene(vec3 bgColor) : bgColor(bgColor) {}
-        Scene(vec3 bgColor, std::shared_ptr<Light> l) : bgColor(bgColor), light(l) {}
 
         const vec3& color() { return bgColor; }
 
@@ -21,7 +20,8 @@ class Scene {
 
         void pushLight(std::shared_ptr<Light> l) { lights.push_back(l); }
 
-        std::shared_ptr<Light> getLight() { return light; }
+        std::vector<std::shared_ptr<Light>> getLights() { return lights; }
+
         std::vector<std::shared_ptr<Shape>> getShapes() { return shapes; }
 
 
@@ -30,6 +30,5 @@ class Scene {
     private:
         std::vector<std::shared_ptr<Shape>> shapes;
         std::vector<std::shared_ptr<Light>> lights;
-        std::shared_ptr<Light> light;
         vec3 bgColor;
 };

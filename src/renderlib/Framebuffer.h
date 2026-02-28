@@ -30,4 +30,6 @@ class Framebuffer {
         void setPNGToLERP(vec3 v1, vec3 v2);
 
         void setPNGCheckered(vec3 c1, vec3 c2);
+
+        void writeToPNG( std::string fileName );
 };

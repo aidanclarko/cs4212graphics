@@ -64,11 +64,23 @@ void GraphicsArgs::process(int argc, char *argv[])
 
   verbose = isSet("verbose");
   if (verbose) { std::cout << "Verbose Output: ON" << std::endl; }
-  
-  isSet("width", width);
+
+  int w;
+  if( isSet("width", w)) {
+    width = w;
+  } else {
+    width = 100;
+  }
+
   if (verbose) { std::cout << "Setting width to " << width << std::endl; }
+
+  int h;
+  if(isSet("height", h)) {
+    height = h;
+  } else {
+    height = 100;
+  }
   
-  isSet("height", height);
   if (verbose) { std::cout << "Setting height to " << height << std::endl; }
 
   isSet("winwidth", windowWidth);
@@ -107,10 +119,14 @@ void GraphicsArgs::process(int argc, char *argv[])
   isSet("outputfile", outputFileName);
   if (verbose) { std::cout << "Setting outputFileName to " << outputFileName << std::endl; }
 
-  std::string bgColorString;
+  std::string bgColorString ;
   if (isSet("bgcolor", bgColorString)) {
       std::istringstream ss(bgColorString);
       ss >> bgColor[0] >> bgColor[1] >> bgColor[2];
+  } else {
+    bgColor[0] = 1;
+    bgColor[1] = 1;
+    bgColor[2] = 1;
   }
 }
 

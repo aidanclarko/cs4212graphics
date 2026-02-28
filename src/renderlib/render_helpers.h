@@ -1,3 +1,6 @@
+#ifndef RENDER_HELPERS_H
+#define RENDER_HELPERS_H
+
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
@@ -15,3 +18,5 @@ inline float random_float(float min, float max) {
     return min + (max-min)*random_float();
 }
 
+
+#endif

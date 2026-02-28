@@ -58,7 +58,7 @@ void writeToPNG( Framebuffer& fb, std::string fileName ) {
 }
 
 void render( std::shared_ptr<Scene> scene,  Framebuffer& fb, PerspectiveCamera& persCam ) {
-    float rpp_NSquare = 2;
+    float rpp_NSquare = 1;
 
     #pragma omp parallel for schedule(dynamic)
     for(int x= 0; x < fb.w(); x++) {
@@ -75,7 +75,6 @@ void render( std::shared_ptr<Scene> scene,  Framebuffer& fb, PerspectiveCamera& 
                     HitStruct h{ 
                         .scene = scene,
                         .cameraPos = persCam.getPos()
-                        
                     };
 
                     float pOffset = (p + random_float()) /rpp_NSquare;
@@ -107,17 +106,22 @@ int main(int argc, char* argv[])
     std::cout << "Interpreted as Triangles: " << numTriangles << std::endl;
 
 
-    point3 eye = point3(0, 0, 4);
+    point3 eye = point3(0, 0, 3);
     vec3 direction = vec3(0, 0, -1);
     float focalLength = 1.0;
     float imageplaneWidth = 1.0;
-    vec3 bgColor(0.325, 0.659, 0.788);
+    vec3 bgColor(0, 0, 0);
     Framebuffer fb(600, 600);
-    std::shared_ptr<Light> l = std::make_shared<Light>(point3(2, 5, 2), vec3(1,1,1));
+    std::shared_ptr<Light> l    = std::make_shared<Light>(point3(0, 0, 2), vec3(1,1,1));
+    std::shared_ptr<Light> lTwo = std::make_shared<Light>(point3(3, 2, -3),  vec3(1,1,1));
 
     PerspectiveCamera persCam(fb.w(), fb.h(), eye, direction, imageplaneWidth, focalLength); 
     std::shared_ptr<Scene> scene = std::make_shared<Scene>(bgColor, l);
     std::shared_ptr<Lambert> lam = std::make_shared<Lambert>();
+    std::shared_ptr<Mirror> mi = std::make_shared<Mirror>();
+
+    scene->pushLight(l);
+    scene->pushLight(lTwo);
 
     for(int i = 0; i < allFloats.size(); i+=9) {
         float a1 = allFloats[i];
@@ -135,10 +139,31 @@ int main(int argc, char* argv[])
         float c3 = allFloats[i + 8];
         vec3 C(c1, c2, c3);
         
+        std::shared_ptr<Triangle> t;
 
-        std::shared_ptr<Triangle> t = std::make_shared<Triangle>(A, B, C, vec3(1,0,0), lam);
+        if(i % 2 == 0) {
+            t = std::make_shared<Triangle>(A, B, C, vec3(1,1,0), mi);
+        } else {
+            t = std::make_shared<Triangle>(A, B, C, vec3(1,0,0), lam);
+        }
+
         scene->pushShape(t);
     }
+
+    
+    std::shared_ptr<Sphere> sOne   = std::make_shared<Sphere>(vec3(3,  0,  5), 4.0f, vec3(0,1,0), lam);
+    std::shared_ptr<Sphere> sTwo   = std::make_shared<Sphere>(vec3(-3, 2,  5), 4.0f, vec3(0,0,1), lam);
+    std::shared_ptr<Sphere> sThree = std::make_shared<Sphere>(vec3(0,  4,  5), 4.0f, vec3(1,1,0), lam);
+    std::shared_ptr<Sphere> sFour  = std::make_shared<Sphere>(vec3(-3, -4, 5), 4.0f, vec3(1,0,0), lam);
+    std::shared_ptr<Sphere> sFive  = std::make_shared<Sphere>(vec3(3,  -3, 5), 4.0f, vec3(0,1,1), lam);
+    std::shared_ptr<Sphere> sSix   = std::make_shared<Sphere>(vec3(0,  -4, 5), 4.0f, vec3(1,0,1), lam);
+    scene->pushShape(sOne);
+    scene->pushShape(sTwo);
+    scene->pushShape(sThree);
+    scene->pushShape(sFour);
+    scene->pushShape(sFive);
+    scene->pushShape(sSix);
+
 
     // helper func above
     std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();

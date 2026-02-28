@@ -30,7 +30,7 @@ class Shader {
             return false;
         }
 
-        virtual vec3 rayColor(HitStruct& h,  std::shared_ptr<Light> l, int depth) = 0;
+        virtual vec3 rayColor(HitStruct& h,  std::vector<std::shared_ptr<Light>> lights, int depth) = 0;
 
     private:
         vec3 baseColor;

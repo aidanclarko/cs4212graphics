@@ -10,9 +10,17 @@ This project uses CMake and vcpkg for managing C++ dependencies.
 things to fix are in issues tab
 
 ## To run and test my bronze level:
+```
 cd buildVCPkg/
 cmake --build .
 ./src/render_main
+  with command args:
+    -w width
+    -h height
+    -r rays per pixlel
+    -k recursion depth
+    -b background color "R G B"
+```
 
 -w, -h, -b are allowed as args in command line, by default background color is white, and size is 100x100
 

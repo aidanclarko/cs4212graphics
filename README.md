@@ -22,7 +22,7 @@ cmake --build .
     -b background color "R G B"
 ```
 
--w, -h, -b are allowed as args in command line, by default background color is white, and size is 100x100
+by default background color is white, and size is 100x100, rays 1, depth 4
 
 
 ## Building Using CMake Presets

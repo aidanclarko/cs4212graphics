@@ -32,11 +32,11 @@ int main(int argc, char *argv[]) {
     std::shared_ptr<Scene> scene = std::make_shared<Scene>(bgColor);
 
     //lights
-
     //if you were trying to recreate my scene i forgot the light pos and colors i used while making my other scenes
-    std::shared_ptr<Light> l = std::make_shared<Light>(point3(3, 12, -10), vec3(1,1,1));
-    std::shared_ptr<Light> lTwo = std::make_shared<Light>(point3(3, 14, -10), vec3(0.32,0.63,0.02));
-    
+
+    std::shared_ptr<Light> l = std::make_shared<Light>(point3(0, 6, 2), vec3(1.0, 1.0, 1.0));
+    std::shared_ptr<Light> lTwo = std::make_shared<Light>(point3(5, 10, 0), vec3(0.8, 0.3, 0.6));
+
     scene->pushLight(l);
     scene->pushLight(lTwo);
     
@@ -74,8 +74,14 @@ int main(int argc, char *argv[]) {
   
 
     RayRender r;
-    r.render(scene, fb, persCam);
+
+    
+    r.render(scene, fb, persCam, args.rpp, args.recursionDepth);
 
     //export to png
-    fb.writeToPNG("testtest.png");
+    if(args.outputFileName.empty()) {
+        fb.writeToPNG("render.png");
+    } else {
+        fb.writeToPNG(args.outputFileName + ".png");
+    }
 }

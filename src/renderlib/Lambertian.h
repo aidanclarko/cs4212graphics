@@ -8,6 +8,7 @@
 class Lambert : public Shader {
     public:
         Lambert() {};
+        Lambert(vec3 d) : diff(d) {};
 
         vec3 rayColor(HitStruct& h, std::vector<std::shared_ptr<Light>> lights, int depth) override { 
             
@@ -19,11 +20,14 @@ class Lambert : public Shader {
                 float nDotl = std::fmax(0.0, ( dot(h.normal, ldir)));
 
                 if(computeShadow(h)) {
-                    lambertShade += h.shapeColor * vec3(0.1, 0.1, 0.1);
+                    lambertShade += diff * vec3(0.1, 0.1, 0.1);
                 } else {
-                    lambertShade += h.shapeColor * l->getColor() * nDotl;
+                    lambertShade += diff * l->getColor() * nDotl;
                 }
             }
             return lambertShade; 
         }
+
+    private:
+        vec3 diff;
 };

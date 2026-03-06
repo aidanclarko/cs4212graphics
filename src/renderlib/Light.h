@@ -4,6 +4,7 @@
 class Light {
     public:
         Light() {}
+        Light(vec3 p) : point(p), color(vec3(1,1,1)) {}
         Light(vec3 p, vec3 c) : point(p), color(c) {}
 
         vec3 getPoint() { return point; }

@@ -14,7 +14,7 @@ class RayRender {
     public:
         RayRender() {}
 
-        void render( std::shared_ptr<Scene> scene,  Framebuffer& fb, PerspectiveCamera& persCam, int rpp, int recDepth  ) {
+        void render( std::shared_ptr<Scene> scene,  Framebuffer& fb, std::shared_ptr<PerspectiveCamera> persCam, int rpp, int recDepth  ) {
             int rpp_NSquare = rpp;
             vec3 c(0.0,0.0,0.0);
 
@@ -27,14 +27,14 @@ class RayRender {
 
                             Ray r;
                             HitStruct h{ 
-                                .cameraPos = persCam.getPos(),
+                                .cameraPos = persCam->getPos(),
                                 .scene = scene
                             };
 
                             float pOffset = (p + random_float()) /rpp_NSquare;
                             float qOffset = (q + random_float()) /rpp_NSquare;
 
-                            persCam.generateRay(x + pOffset , y + qOffset, r);
+                            persCam->generateRay(x + pOffset , y + qOffset, r);
                             c += scene->computeRayColor(r, 1.0, INFINITY, h, recDepth);
                         }
                     }

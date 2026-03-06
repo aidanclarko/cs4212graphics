@@ -11,6 +11,8 @@ class Triangle : public Shape {
         Triangle(point3 A, point3 B, point3 C): A(A), B(B), C(C), color(vec3(1,1,1)) {}
         Triangle(point3 A, point3 B, point3 C, vec3 color): A(A), B(B), C(C), color(color)  {}
         Triangle(point3 A, point3 B, point3 C, vec3 color, std::shared_ptr<Shader> s): A(A), B(B), C(C), color(color), shader(s)  {}
+        Triangle(point3 A, point3 B, point3 C, std::shared_ptr<Shader> s): A(A), B(B), C(C), shader(s)  {}
+        
         bool intersect(const Ray& r, const float tmin, float &tmax, HitStruct& hit) override {
             float a = A.x() - B.x();
             float b = A.y() - B.y();

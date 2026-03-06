@@ -52,6 +52,13 @@ class Camera {
         virtual void generateRay(float i, float j, Ray &r) = 0;
 
         point3 getPos() const { return pos; }
+
+        void setDimensions(int pixel_nx, int pixel_ny) {
+            nx = pixel_nx;
+            ny = pixel_ny;
+            float aspect_ratio = (float)nx / (float)ny;
+            imageplane_height = imageplane_width / aspect_ratio;
+        }
         
     protected:
         vec3 pos;

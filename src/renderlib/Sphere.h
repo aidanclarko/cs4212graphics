@@ -14,6 +14,7 @@ class Sphere : public Shape {
         Sphere(point3 center, float radius): radius(radius), center(center) {}
         Sphere(point3 center, float radius, vec3 color): radius(radius), center(center), color(color) {}
         Sphere(point3 center, float radius, vec3 color, std::shared_ptr<Shader> sh): radius(radius), center(center), color(color), shader(sh) {}
+        Sphere(point3 center, float radius, std::shared_ptr<Shader> sh): radius(radius), center(center), shader(sh) {}
 
         const point3& c() const {return center;}
         const float& r() const {return radius;}

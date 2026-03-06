@@ -12,7 +12,6 @@ vec3 Scene::computeRayColor(const Ray& r, float tmin, float tmax, HitStruct& h, 
     bool hitShape = false;
     for(auto s : shapes) {
         if(s->intersect(r, tmin, tmax, h)) {
-            h.shapeColor = s->getColor();
             hitShape = true;
         }
     }

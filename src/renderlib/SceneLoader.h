@@ -50,6 +50,7 @@ public:
     std::cout << "Creating point light." << std::endl;
     auto light = std::make_shared<Light>(vec3(pos.x, pos.y, pos.z), vec3(intensity.x, intensity.y, intensity.z));
     // light->type = "Point Light";
+    std::cout << light << std::endl;
     m_targetScene->pushLight(light);
   }
   void addAreaLight(const ISceneLoader::vec &pos,

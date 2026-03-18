@@ -67,6 +67,18 @@ class Triangle : public Shape {
 
         const vec3& getColor() const override { return color; }
 
+        const point3 getCenter() const override { 
+            return (A + B + C) / 3.0f;
+        }
+
+        const BoundingBox boundingBox() const override {
+            BoundingBox box;
+            box.update(A);
+            box.update(B);
+            box.update(C);
+            return box;
+        }
+
     private:
         point3 A;
         point3 B;

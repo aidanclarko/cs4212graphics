@@ -19,9 +19,7 @@ class Lambert : public Shader {
                 vec3 ldir = unit_vector( l->getPoint() - h.point );
                 float nDotl = std::fmax(0.0, ( dot(h.normal, ldir)));
 
-                if(computeShadow(h)) {
-                    lambertShade += diff * vec3(0.1, 0.1, 0.1);
-                } else {
+                if(!computeShadow(h, l)) {
                     lambertShade += diff * l->getColor() * nDotl;
                 }
             }

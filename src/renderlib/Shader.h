@@ -10,7 +10,7 @@
 class Shader {
     public:
         Shader() {}
-        bool computeShadow(HitStruct& h);
+        bool computeShadow(HitStruct& h, std::shared_ptr<Light> l);
         virtual vec3 rayColor(HitStruct& h,  std::vector<std::shared_ptr<Light>> lights, int depth) = 0;
 
     private:

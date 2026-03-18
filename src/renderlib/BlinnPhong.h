@@ -21,10 +21,8 @@ class BlinnPhong : public Shader {
                 float nDotH = std::max(dot(h.normal, halfVec), 0.0f);
                 vec3 specular = spec * l->getColor() * std::pow(nDotH, shininess);
 
-                if(computeShadow(h)) {
-                    total +=  diff * vec3(0.1, 0.1, 0.1);
-                } else {
-                    total += diffuse + specular;
+                if(!computeShadow(h, l)) {
+                    total +=  diffuse + specular;
                 }
             }
             return total;

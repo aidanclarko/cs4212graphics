@@ -52,13 +52,22 @@ class Sphere : public Shape {
 
         const vec3& getColor() const override { return color; }
 
-        const point3& getCenter() const {return center;}
+        const point3 getCenter() const override { return center; }
+
+        const BoundingBox boundingBox() const override {
+            BoundingBox box;
+            vec3 llb = center - vec3(radius, radius, radius);
+            vec3 urf = center + vec3(radius, radius, radius);
+
+            box = BoundingBox(llb, urf);
+
+            return box;
+        }
 
     private:
         float radius;
         point3 center;
         vec3 color;
         std::shared_ptr<Shader> shader;
-
 };
 #endif

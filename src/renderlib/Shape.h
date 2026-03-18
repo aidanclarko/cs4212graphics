@@ -9,7 +9,6 @@
 class Shape {
     public:
         virtual bool intersect( const Ray& r, const float tmin, float &tmax, HitStruct& h) = 0;
-        virtual const vec3& getColor() const = 0;
         virtual const BoundingBox boundingBox() const = 0;
         virtual const point3 getCenter() const = 0;
     private:

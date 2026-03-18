@@ -65,7 +65,7 @@ class Triangle : public Shape {
             return true;
         }
 
-        const vec3& getColor() const override { return color; }
+        // const vec3& getColor() const override { return color; }
 
         const point3 getCenter() const override { 
             return (A + B + C) / 3.0f;

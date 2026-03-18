@@ -50,7 +50,7 @@ class Sphere : public Shape {
             return true;
         }
 
-        const vec3& getColor() const override { return color; }
+        // const vec3& getColor() const override { return color; }
 
         const point3 getCenter() const override { return center; }
 

@@ -3,15 +3,14 @@
 #include "Light.h"
 
 bool Shader::computeShadow(HitStruct& h, std::shared_ptr<Light> light) {
-    float epsilon = 1e-4f;
+    float epsilon = 1e-3f;
     vec3 ldir = unit_vector(light->getPoint() - h.point);
-    Ray shadow = Ray(h.point + vec3(epsilon, epsilon, epsilon), ldir);
+    Ray shadow = Ray(h.point + h.normal * epsilon, ldir);
     float distToLight = (light->getPoint() - h.point).length();
     HitStruct shadowHit;
-    for (auto s : h.scene->getShapes()) {
-        if (s->intersect(shadow, epsilon, distToLight, shadowHit)) {
-            return true;
-        }
+
+    if (h.scene->getBVH()->intersect(shadow, epsilon, distToLight, shadowHit)) {
+        return true;
     }
     return false;
 }

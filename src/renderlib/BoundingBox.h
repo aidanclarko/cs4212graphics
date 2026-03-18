@@ -2,6 +2,7 @@
 
 #include "vec3.h"
 #include "Ray.h"
+#include <cfloat>
 
 class BoundingBox  {
     public:
@@ -9,7 +10,9 @@ class BoundingBox  {
         vec3 urf;
 
         //def
-        BoundingBox() {}
+        BoundingBox() : 
+            llb(vec3(FLT_MAX, FLT_MAX, FLT_MAX)), 
+            urf(vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX)) {}
 
         BoundingBox(vec3 lowerLeft, vec3 upperRight) : llb(lowerLeft), urf(upperRight) {}
 
@@ -25,7 +28,7 @@ class BoundingBox  {
             }
         }
 
-        bool hit(const Ray &r, float tmin, float tmax) {
+        bool hit(const Ray &r, float tmin, float tmax) const {
             for (int axis = 0; axis < 3; axis++) {
                 float t0, t1;
                 if (r.direction()[axis] >= 0) {

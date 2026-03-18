@@ -7,6 +7,7 @@
 #include "HitStruct.h"
 #include "Light.h"
 #include "PerspectiveCamera.h"
+#include "BoundingVolumeNode.h"
 
 
 class Scene {
@@ -24,9 +25,16 @@ class Scene {
 
         std::vector<std::shared_ptr<Light>> getLights() { return lights; }
 
-        std::vector<std::shared_ptr<Shape>> getShapes() { return shapes; }
+        const std::vector<std::shared_ptr<Shape>>& getShapes() const { return shapes; }
+        std::vector<std::shared_ptr<Shape>>& getShapes() { return shapes; }
 
         std::vector<std::shared_ptr<PerspectiveCamera>> getCameras() { return cameras; }
+
+        void buildBVH(int AXIS) {
+            BVH = std::make_shared<BoundingVolumeNode>(shapes, AXIS);
+        }
+
+        std::shared_ptr<BoundingVolumeNode> getBVH() {return BVH;}
 
 
         vec3 computeRayColor(const Ray& r, float tmin, float tmax, HitStruct& h, int depth);
@@ -36,4 +44,5 @@ class Scene {
         std::vector<std::shared_ptr<Shape>> shapes;
         std::vector<std::shared_ptr<Light>> lights;
         vec3 bgColor;
+        std::shared_ptr<BoundingVolumeNode> BVH;
 };

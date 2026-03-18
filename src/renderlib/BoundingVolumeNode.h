@@ -58,12 +58,10 @@ class BoundingVolumeNode : public Shape {
             //  std::cout << "hit\n";
             if (mainBBox.hit(r, tmin, tmax)) {
                 HitStruct lhit, rhit;
-                lhit.t = std::numeric_limits<float>::infinity();
-                rhit.t = std::numeric_limits<float>::infinity();
-                lhit.scene = h.scene;  // add these
-                rhit.scene = h.scene;
                 bool lefthit = false;
                 bool righthit = false;
+                lhit = h;
+                rhit = h;
                 
                 if(leftChild) lefthit = leftChild->intersect(r, tmin, tmax, lhit);
                 if(rightChild) righthit = rightChild->intersect(r, tmin, tmax, rhit);

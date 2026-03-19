@@ -61,7 +61,7 @@ int main(void)
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glClearColor(0.0, 0.7, 1.0, 1.0);
+    glClearColor(6.0, 0.7, 3.0, 1.0);
 
     int fb_width, fb_height;
     glfwGetFramebufferSize(window, &fb_width, &fb_height);
@@ -89,9 +89,11 @@ int main(void)
     // this is the actual triangle data that will be copied to                                              
     // the GPU memory
     //bunny raw data could easily be implemented here                                                                                       
-    std::vector< float > host_VertexBuffer{ -0.5f, -0.5f, 0.0f,    // V0                                    
-                                            0.5f, -0.5f, 0.0f,    // V1                                    
-                                            0.0f, 0.5f, 0.0f };   // V2                                    
+    std::vector< float > host_VertexBuffer{
+        -0.5f, -0.5f, 0.0f,    1.0f , 0.0f, 0.0f,                             
+         0.5f, -0.5f, 0.0f,    0.0f, 1.0f, 0.0f,                                 
+         0.0f, 0.5f, 0.0f,     0.0f, 0.0f, 1.0f 
+    };                                     
 
     int numBytes = host_VertexBuffer.size() * sizeof(float);
 
@@ -110,16 +112,26 @@ int main(void)
     glBindVertexArray(m_VAO);
 
     // VAO details here - we only have 1 attribute or location                                              
-    // (Position of the vertex)                                                                             
-    glEnableVertexAttribArray(0);
+    // (Position of the vertex)    
+    
     glBindBuffer(GL_ARRAY_BUFFER, m_triangleVBO[0]);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+
     glBindVertexArray(0);
+
+
 
     // Create a shader using my GLSLObject class                                                            
     sivelab::GLSLObject shader;
-    shader.addShader( "vertexShader_passthrough.glsl", sivelab::GLSLObject::VERTEX_SHADER );
-    shader.addShader( "fragmentShader_passthrough.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
+    // shader.addShader( "vertexShader_passthrough.glsl", sivelab::GLSLObject::VERTEX_SHADER );
+    shader.addShader( "vertexShader_color.glsl", sivelab::GLSLObject::VERTEX_SHADER );
+    shader.addShader( "fragmentShader_color.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
+    // shader.addShader( "fragmentShader_passthrough.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
     shader.createProgram();
 
     double timeDiff = 0.0, startFrameTime = 0.0, endFrameTime = 0.0;

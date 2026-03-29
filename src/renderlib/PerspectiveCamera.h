@@ -13,6 +13,9 @@ class PerspectiveCamera : public Camera {
         PerspectiveCamera(point3 eye, vec3 direction, float imageplane_width, float focalLength)
             : Camera(0, 0, eye, direction, imageplane_width, focalLength) {}
 
+        PerspectiveCamera(float nx, float ny, point3 eye, vec3 direction, float imageplane_width, float focalLength, float fov, float aspect, float nearPlane, float farPlane)
+            : Camera(nx, ny, eye, direction, imageplane_width, focalLength, fov, aspect, nearPlane, farPlane) {}
+
         void generateRay(float i, float j, Ray &ray) override {
             float u,v;
             float l,r,b,t;

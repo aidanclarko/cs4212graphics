@@ -12,6 +12,9 @@
 
 #include "GLSL.h"
 
+#include "vec3.h"
+#include "PerspectiveCamera.h"
+
 int CheckGLErrors(const char *s)
 {
     int errCount = 0;
@@ -72,8 +75,23 @@ int main(void)
     //
     // The ortho parameters, in order: left, right, bottom, top, zNear, zFar
     float halfWidth = 15.0 / 2.0;
-    float halfHeight = halfWidth / aspectRatio;
-    glm::mat4 projectionMatrix = glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, -10.0f, 10.0f);
+    float halfHeight = halfWidth;
+
+    float left = -halfWidth;
+    float right = halfWidth;
+
+    float bottom = -halfHeight;
+    float top = halfHeight;
+
+    float near = 5.0f;
+    float far = -5.0f;
+
+    // glm::mat4 M_ortho = glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, near, far);
+    vec3 m_pos(0,0,0), m_viewDir(0,0,-1);
+
+    PerspectiveCamera cam(fb_width, fb_height, m_pos, m_viewDir, 0.5f, 1.0f, 3.14159f/4.0f, 1.0f, 0.1f, 100.0f);
+    glm::mat4 M_pers = cam.getPerspectiveMatrix();
+
 
     GLint major_version;
     glGetIntegerv(GL_MAJOR_VERSION, &major_version);
@@ -90,10 +108,11 @@ int main(void)
     // the GPU memory
     //bunny raw data could easily be implemented here                                                                                       
     std::vector< float > host_VertexBuffer{
-        -0.5f, -0.5f, 0.0f,    1.0f , 0.0f, 0.0f,                             
-         0.5f, -0.5f, 0.0f,    0.0f, 1.0f, 0.0f,                                 
-         0.0f, 0.5f, 0.0f,     0.0f, 0.0f, 1.0f 
-    };                                     
+        -3.0f, -3.0f, 0.0f,    1.0f , 0.0f, 0.0f,                             
+         3.0f, -3.0f, 0.0f,    0.0f, 1.0f, 0.0f,                                 
+         0.0f, 3.0f, 0.0f,     0.0f, 0.0f, 1.0f 
+    };     
+
 
     int numBytes = host_VertexBuffer.size() * sizeof(float);
 
@@ -129,12 +148,24 @@ int main(void)
     // Create a shader using my GLSLObject class                                                            
     sivelab::GLSLObject shader;
     // shader.addShader( "vertexShader_passthrough.glsl", sivelab::GLSLObject::VERTEX_SHADER );
-    shader.addShader( "vertexShader_color.glsl", sivelab::GLSLObject::VERTEX_SHADER );
+    shader.addShader( "vertexShader_withMatrixTransformation.glsl", sivelab::GLSLObject::VERTEX_SHADER );
     shader.addShader( "fragmentShader_color.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
     // shader.addShader( "fragmentShader_passthrough.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
     shader.createProgram();
 
+    GLuint projMatrixID, viewMatrixID, modelMatrixID;
+    projMatrixID = shader.createUniform( "projMatrix" );
+    viewMatrixID = shader.createUniform( "viewMatrix" );
+    modelMatrixID = shader.createUniform( "modelMatrix" );
+
+    glm::mat4 modelTransform = glm::mat4(1.0);
+    float rot = 0.0;
+    modelTransform = glm::rotate(modelTransform, rot, glm::vec3(0, 1 ,0));
+    
+
     double timeDiff = 0.0, startFrameTime = 0.0, endFrameTime = 0.0;
+
+    
     
     /* Loop until the user closes the window */
     /* game loop above is initialization getting itn on gpu, load
@@ -144,23 +175,40 @@ int main(void)
     */
 
     
-
+    float rotationAngle = 0.0f;
 
     while (!glfwWindowShouldClose(window))
-    {
+    {  
         endFrameTime = glfwGetTime();
         timeDiff = endFrameTime - startFrameTime;
         startFrameTime = glfwGetTime();
+
 
         // Clear the window's buffer (or clear the screen to our
         // background color)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        glm::mat4 M_view = cam.lookAt();
         /* Render your objects here */
         shader.activate();
+        modelTransform = glm::mat4(1.0);
+        modelTransform = glm::rotate(modelTransform, rotationAngle, glm::vec3(0, 1, 0));
+        // modelTransform = glm::rotate(modelTransform, rotationAngle, glm::vec3(1, 0, 0));
+
+        rotationAngle += 0.05;
+        if(rotationAngle > 2.0 * 3.14159) rotationAngle = 0.0f;
+        
+        
+
+        // copy from the host to the device the view matrix and the projection matrix                                                                                       
+        glUniformMatrix4fv(projMatrixID, 1, GL_FALSE, glm::value_ptr( M_pers ));
+        glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, glm::value_ptr( M_view ));
+        glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, glm::value_ptr( modelTransform ));
+
         glBindVertexArray(m_VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glBindVertexArray(0);
+
         shader.deactivate();
 
         // Swap the front and back buffers
@@ -168,6 +216,21 @@ int main(void)
 
         /* Poll for and process events */
         glfwPollEvents();
+
+        float moveRatePerFrame = 0.05;
+
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            cam.moveForward(moveRatePerFrame);
+        }
+        else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+            cam.moveLeft(moveRatePerFrame);
+        }
+        else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            cam.moveBack(moveRatePerFrame);
+        }
+        else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            cam.moveRight(moveRatePerFrame);
+        }
 
         if (glfwGetKey( window, GLFW_KEY_T ) == GLFW_PRESS) {
             std::cout << "fps: " << 1.0/timeDiff << std::endl;

@@ -2,24 +2,18 @@ This project uses CMake and vcpkg for managing C++ dependencies.
 
 ## IN PROGRESS BUILD
   ### current progress:
-   bronze level completed
+   OpenGL matrix transformations/rotations, shaders, and camera
   ## next steps:
-  diffuse? obj reader?
+  OpenGL
 
 
 things to fix are in issues tab
 
-## To run and test my bronze level:
+## To run and test my OpenGL Lab:
 ```
-cd buildVCPkg/
-cmake --build .
-./src/render_main
-  with command args:
-    -w width
-    -h height
-    -r rays per pixlel
-    -k recursion depth
-    -b background color "R G B"
+cd buildVCPkg/OpenGL
+cmake --build ..
+./glfwExample
 ```
 
 by default background color is white, and size is 100x100, rays 1, depth 4

@@ -12,3 +12,4 @@ add_library (cs4212-renderlib
 )
 
 target_link_libraries(cs4212-renderlib PUBLIC PNG::PNG)
+target_include_directories(cs4212-renderlib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

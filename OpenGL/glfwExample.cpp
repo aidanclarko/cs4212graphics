@@ -123,7 +123,6 @@ int main(void)
 
     std::vector< VertexPoint > host_VertexBuffer = t.toVertexBuffer();
 
-
     int numBytes = host_VertexBuffer.size() * sizeof(VertexPoint);
 
     // copy the numBytes from host_VertexBuffer t the GPU and store in                                      
@@ -158,17 +157,20 @@ int main(void)
     // Create a shader using my GLSLObject class                                                            
     sivelab::GLSLObject shader;
     // shader.addShader( "vertexShader_passthrough.glsl", sivelab::GLSLObject::VERTEX_SHADER );
-    shader.addShader( "vertexShader_lambertian.glsl", sivelab::GLSLObject::VERTEX_SHADER );
-    shader.addShader( "fragmentShader_lambertian.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
+    shader.addShader( "vertexShader_blinn.glsl", sivelab::GLSLObject::VERTEX_SHADER );
+    shader.addShader( "fragmentShader_blinn.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
     // shader.addShader( "fragmentShader_passthrough.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
     shader.createProgram();
 
-    GLuint projMatrixID, viewMatrixID, modelMatrixID, normalMatrixID, lightPosID, diffID;
+    GLuint projMatrixID, viewMatrixID, modelMatrixID, normalMatrixID, lightPosID, diffID, camPosID, specularID, shininessID;
     projMatrixID = shader.createUniform( "projMatrix" );
     viewMatrixID = shader.createUniform( "viewMatrix" );
     modelMatrixID = shader.createUniform( "modelMatrix" );
     normalMatrixID = shader.createUniform( "normalMatrix" );
     lightPosID = shader.createUniform( "lightPos" );
+    camPosID = shader.createUniform( "camPos" );
+    specularID = shader.createUniform( "specular" );
+    shininessID = shader.createUniform( "shininess" );
     diffID = shader.createUniform( "diffuse" );
 
     glm::mat4 modelTransform = glm::mat4(1.0);
@@ -178,10 +180,14 @@ int main(void)
 
     glm::mat4 M_normal = glm::mat4(1.0);
 
-    glm::vec3 lightPos(0, 0, 1);
-    glm::vec3 diffuse(0.8f, 0.4f, 0.2f);
-
+    glm::vec3 lightPos(0, 0, 10);
     
+
+    //Shader Components
+    glm::vec3 diffuse(0.0f, 0.45f, 0.75f);
+    glm::vec3 specular(1.0f, 1.0f, 1.0f);
+    float shininess = 120.0f;
+
 
     double timeDiff = 0.0, startFrameTime = 0.0, endFrameTime = 0.0;
 
@@ -199,6 +205,7 @@ int main(void)
 
     while (!glfwWindowShouldClose(window))
     {  
+        glm::vec3 camPos = cam.getGLMPos();
         endFrameTime = glfwGetTime();
         timeDiff = endFrameTime - startFrameTime;
         startFrameTime = glfwGetTime();
@@ -216,7 +223,7 @@ int main(void)
 
         M_normal = glm::transpose(glm::inverse(modelTransform));
 
-        rotationAngle += 0.05;
+        rotationAngle += 0.02;
         if(rotationAngle > 2.0 * 3.14159) rotationAngle = 0.0f;
         
         
@@ -227,7 +234,10 @@ int main(void)
         glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, glm::value_ptr( modelTransform ));
         glUniformMatrix4fv(normalMatrixID, 1, GL_FALSE, glm::value_ptr( M_normal ));
         glUniform3fv(lightPosID, 1, glm::value_ptr(lightPos));
+        glUniform3fv(camPosID, 1, glm::value_ptr(camPos));
         glUniform3fv(diffID, 1, glm::value_ptr(diffuse));
+        glUniform3fv(specularID, 1, glm::value_ptr(specular));
+        glUniform1f(shininessID, shininess);
 
 
         glBindVertexArray(m_VAO);

@@ -89,14 +89,22 @@ class Camera {
 
          glm::mat4 getPerspectiveMatrix() const {
             return glm::perspective(fov, aspect,  nearPlane,  farPlane);
-         }
+        }
 
          glm::mat4 lookAt() const {
             glm::vec3 gPos(pos.x(), pos.y(), pos.z());
             glm::vec3 gW(W.x(), W.y(), W.z());
             glm::vec3 gV(V.x(), V.y(), V.z());
             return glm::lookAt(gPos, gPos - gW, gV);
-         }
+        }
+
+        glm::vec3 getGLMPos() const {
+            return glm::vec3(
+                pos.x(),
+                pos.y(),
+                pos.z()
+            );
+        }
 
         void moveForward(float amount) { pos = pos + (-W) * amount; }
         void moveBack(float amount)    { pos = pos + W * amount; }

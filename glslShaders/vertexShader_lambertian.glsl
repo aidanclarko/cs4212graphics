@@ -9,16 +9,14 @@ uniform mat4 modelMatrix;
 uniform mat4 normalMatrix;
 
 uniform vec3 lightPos;
-
 out vec4 normal;
-out vec4 lightDir;
+out vec3 lightDir;
 
 void main(void)
 {
   normal = normalize(normalMatrix * vec4(in_Normal, 0.0));
-
   vec4 vertexWorldPos = modelMatrix * vec4(in_Position, 1.0);
-  lightDir = normalize(vec4(lightPos, 1.0) - vertexWorldPos);
+  lightDir = normalize(lightPos - vertexWorldPos.xyz);
 
   gl_Position = projMatrix * viewMatrix * vertexWorldPos;
 }

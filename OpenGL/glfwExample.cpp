@@ -15,6 +15,7 @@
 #include "vec3.h"
 #include "PerspectiveCamera.h"
 #include "Triangle.h"
+#include "ObjMesh.h"
 
 int CheckGLErrors(const char *s)
 {
@@ -65,7 +66,7 @@ int main(void)
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glClearColor(6.0, 0.7, 3.0, 1.0);
+    glClearColor(0.0, 0.0, 0.0, 1.0);
 
     int fb_width, fb_height;
     glfwGetFramebufferSize(window, &fb_width, &fb_height);
@@ -88,7 +89,7 @@ int main(void)
     float far = -5.0f;
 
     // glm::mat4 M_ortho = glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, near, far);
-    vec3 m_pos(0,0,0), m_viewDir(0,0,-1);
+    vec3 m_pos(0,5,0), m_viewDir(0,0,-1);
 
     PerspectiveCamera cam(fb_width, fb_height, m_pos, m_viewDir, 0.5f, 1.0f, 3.14159f/4.0f, 1.0f, 0.1f, 100.0f);
     glm::mat4 M_pers = cam.getPerspectiveMatrix();
@@ -114,14 +115,19 @@ int main(void)
     //      0.0f, 3.0f, 0.0f,     0.0f, 0.0f, 1.0f 
     // };     
 
-    Triangle t(
-        vec3(-3.0f, -3.0f, 0.0f),
-        vec3(3.0f, -3.0f, 0.0f),
-        vec3(0.0f, 3.0f, 0.0f)
-    );
+    // Triangle t(
+    //     vec3(-3.0f, -3.0f, 0.0f),
+    //     vec3(3.0f, -3.0f, 0.0f),
+    //     vec3(0.0f, 3.0f, 0.0f)
+    // );
+    ObjMesh obj("../../src/json/abysswatchers.obj");
+    std::vector< VertexPoint > host_VertexBuffer;
     // t.toVertexBuffer();
-
-    std::vector< VertexPoint > host_VertexBuffer = t.toVertexBuffer();
+    
+    for(int i = 0; i < obj.getFaces().size(); i++) {
+        auto faces = obj.getFaces().at(i).toVertexBuffer();
+        host_VertexBuffer.insert(host_VertexBuffer.end(), faces.begin(), faces.end());
+    }
 
     int numBytes = host_VertexBuffer.size() * sizeof(VertexPoint);
 
@@ -130,7 +136,8 @@ int main(void)
     glBufferData(GL_ARRAY_BUFFER, numBytes, host_VertexBuffer.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // once copied, we no longer need the data on the host (CPU) :)                                             
+    // once copied, we no longer need the data on the host (CPU) :) 
+    int vertexCount = host_VertexBuffer.size();                                            
     host_VertexBuffer.clear();
 
     // create a vertex array object that will map the attributes in                                         
@@ -174,17 +181,18 @@ int main(void)
     diffID = shader.createUniform( "diffuse" );
 
     glm::mat4 modelTransform = glm::mat4(1.0);
-    float rot = 0.0;
-    modelTransform = glm::rotate(modelTransform, rot, glm::vec3(0, 1 ,0));
+
+    float rot  = 0.0f;
+    modelTransform = glm::rotate(modelTransform, rot, glm::vec3(0, 1, 0));
 
 
     glm::mat4 M_normal = glm::mat4(1.0);
 
-    glm::vec3 lightPos(0, 0, 10);
+    glm::vec3 lightPos(5, 10, 10);
     
 
     //Shader Components
-    glm::vec3 diffuse(0.0f, 0.45f, 0.75f);
+    glm::vec3 diffuse(0.263, 0.678, 0.306);
     glm::vec3 specular(1.0f, 1.0f, 1.0f);
     float shininess = 120.0f;
 
@@ -202,6 +210,7 @@ int main(void)
 
     
     float rotationAngle = 0.0f;
+
 
     while (!glfwWindowShouldClose(window))
     {  
@@ -223,7 +232,7 @@ int main(void)
 
         M_normal = glm::transpose(glm::inverse(modelTransform));
 
-        rotationAngle += 0.02;
+        rotationAngle += 0.00;
         if(rotationAngle > 2.0 * 3.14159) rotationAngle = 0.0f;
         
         
@@ -241,7 +250,7 @@ int main(void)
 
 
         glBindVertexArray(m_VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, vertexCount);
         glBindVertexArray(0);
 
         shader.deactivate();

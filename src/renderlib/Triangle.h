@@ -4,6 +4,14 @@
 #include "Shape.h"
 #include "HitStruct.h"
 #include "Shader.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
+struct VertexPoint {
+    glm::vec3 point;
+    glm::vec3 normal;
+};
 
 class Triangle : public Shape {
     public:
@@ -65,6 +73,37 @@ class Triangle : public Shape {
             return true;
         }
 
+        glm::vec3 OpenGLNormal() {
+            vec3 edgeOne = B - A;
+            vec3 edgeTwo = C - A;
+            vec3 normal = unit_vector(cross(edgeOne, edgeTwo));
+
+            return glm::vec3(normal.x(), normal.y(), normal.z());
+        }
+
+        std::vector<VertexPoint> toVertexBuffer() {
+            VertexPoint vertA = {
+                glm::vec3(this->A.x(),this->A.y(), this->A.z()),
+                this->OpenGLNormal()
+            };
+
+            VertexPoint vertB = {
+                glm::vec3(this->B.x(),this->B.y(), this->B.z()),
+                this->OpenGLNormal()
+            };
+
+            VertexPoint vertC = {
+                glm::vec3(this->C.x(),this->C.y(), this->C.z()),
+                this->OpenGLNormal()
+            };
+
+
+            return std::vector<VertexPoint>{
+                vertA, vertB, vertC
+            };
+
+        }
+
         // const vec3& getColor() const override { return color; }
 
         const point3 getCenter() const override { 
@@ -78,6 +117,8 @@ class Triangle : public Shape {
             box.update(C);
             return box;
         }
+
+
 
     private:
         point3 A;

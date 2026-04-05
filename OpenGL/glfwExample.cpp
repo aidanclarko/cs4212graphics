@@ -14,6 +14,7 @@
 
 #include "vec3.h"
 #include "PerspectiveCamera.h"
+#include "Triangle.h"
 
 int CheckGLErrors(const char *s)
 {
@@ -107,14 +108,22 @@ int main(void)
     // this is the actual triangle data that will be copied to                                              
     // the GPU memory
     //bunny raw data could easily be implemented here                                                                                       
-    std::vector< float > host_VertexBuffer{
-        -3.0f, -3.0f, 0.0f,    1.0f , 0.0f, 0.0f,                             
-         3.0f, -3.0f, 0.0f,    0.0f, 1.0f, 0.0f,                                 
-         0.0f, 3.0f, 0.0f,     0.0f, 0.0f, 1.0f 
-    };     
+    // std::vector< float > host_VertexBuffer{
+    //     -3.0f, -3.0f, 0.0f,    1.0f , 0.0f, 0.0f,                             
+    //      3.0f, -3.0f, 0.0f,    0.0f, 1.0f, 0.0f,                                 
+    //      0.0f, 3.0f, 0.0f,     0.0f, 0.0f, 1.0f 
+    // };     
 
+    Triangle t(
+        vec3(-3.0f, -3.0f, 0.0f),
+        vec3(3.0f, -3.0f, 0.0f),
+        vec3(0.0f, 3.0f, 0.0f)
+    );
+    // t.toVertexBuffer();
 
-    int numBytes = host_VertexBuffer.size() * sizeof(float);
+    std::vector< VertexPoint > host_VertexBuffer = t.toVertexBuffer();
+
+    int numBytes = host_VertexBuffer.size() * sizeof(VertexPoint);
 
     // copy the numBytes from host_VertexBuffer t the GPU and store in                                      
     // the currently bound VBO                                                                              
@@ -136,10 +145,10 @@ int main(void)
     glBindBuffer(GL_ARRAY_BUFFER, m_triangleVBO[0]);
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexPoint), (void*)offsetof(VertexPoint, point));
 
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexPoint), (void*)offsetof(VertexPoint, normal));
 
     glBindVertexArray(0);
 
@@ -148,20 +157,37 @@ int main(void)
     // Create a shader using my GLSLObject class                                                            
     sivelab::GLSLObject shader;
     // shader.addShader( "vertexShader_passthrough.glsl", sivelab::GLSLObject::VERTEX_SHADER );
-    shader.addShader( "vertexShader_withMatrixTransformation.glsl", sivelab::GLSLObject::VERTEX_SHADER );
-    shader.addShader( "fragmentShader_color.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
+    shader.addShader( "vertexShader_normal.glsl", sivelab::GLSLObject::VERTEX_SHADER );
+    shader.addShader( "fragmentShader_normal.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
     // shader.addShader( "fragmentShader_passthrough.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
     shader.createProgram();
 
-    GLuint projMatrixID, viewMatrixID, modelMatrixID;
+    GLuint projMatrixID, viewMatrixID, modelMatrixID, normalMatrixID, lightPosID, diffID, camPosID, specularID, shininessID;
     projMatrixID = shader.createUniform( "projMatrix" );
     viewMatrixID = shader.createUniform( "viewMatrix" );
     modelMatrixID = shader.createUniform( "modelMatrix" );
+    normalMatrixID = shader.createUniform( "normalMatrix" );
+    lightPosID = shader.createUniform( "lightPos" );
+    camPosID = shader.createUniform( "camPos" );
+    specularID = shader.createUniform( "specular" );
+    shininessID = shader.createUniform( "shininess" );
+    diffID = shader.createUniform( "diffuse" );
 
     glm::mat4 modelTransform = glm::mat4(1.0);
     float rot = 0.0;
     modelTransform = glm::rotate(modelTransform, rot, glm::vec3(0, 1 ,0));
+
+
+    glm::mat4 M_normal = glm::mat4(1.0);
+
+    glm::vec3 lightPos(0, 0, 10);
     
+
+    //Shader Components
+    glm::vec3 diffuse(0.0f, 0.45f, 0.75f);
+    glm::vec3 specular(1.0f, 1.0f, 1.0f);
+    float shininess = 120.0f;
+
 
     double timeDiff = 0.0, startFrameTime = 0.0, endFrameTime = 0.0;
 
@@ -179,6 +205,7 @@ int main(void)
 
     while (!glfwWindowShouldClose(window))
     {  
+        glm::vec3 camPos = cam.getGLMPos();
         endFrameTime = glfwGetTime();
         timeDiff = endFrameTime - startFrameTime;
         startFrameTime = glfwGetTime();
@@ -193,9 +220,10 @@ int main(void)
         shader.activate();
         modelTransform = glm::mat4(1.0);
         modelTransform = glm::rotate(modelTransform, rotationAngle, glm::vec3(0, 1, 0));
-        // modelTransform = glm::rotate(modelTransform, rotationAngle, glm::vec3(1, 0, 0));
 
-        rotationAngle += 0.05;
+        M_normal = glm::transpose(glm::inverse(modelTransform));
+
+        rotationAngle += 0.02;
         if(rotationAngle > 2.0 * 3.14159) rotationAngle = 0.0f;
         
         
@@ -204,6 +232,13 @@ int main(void)
         glUniformMatrix4fv(projMatrixID, 1, GL_FALSE, glm::value_ptr( M_pers ));
         glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, glm::value_ptr( M_view ));
         glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, glm::value_ptr( modelTransform ));
+        glUniformMatrix4fv(normalMatrixID, 1, GL_FALSE, glm::value_ptr( M_normal ));
+        glUniform3fv(lightPosID, 1, glm::value_ptr(lightPos));
+        glUniform3fv(camPosID, 1, glm::value_ptr(camPos));
+        glUniform3fv(diffID, 1, glm::value_ptr(diffuse));
+        glUniform3fv(specularID, 1, glm::value_ptr(specular));
+        glUniform1f(shininessID, shininess);
+
 
         glBindVertexArray(m_VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);

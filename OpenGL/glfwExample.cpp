@@ -16,7 +16,7 @@
 #include "PerspectiveCamera.h"
 #include "Triangle.h"
 #include "ObjMesh.h"
-#include "GLMTSphere.h"
+#include "GLMSphere.h"
 
 int CheckGLErrors(const char *s)
 {

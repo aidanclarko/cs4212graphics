@@ -16,6 +16,7 @@
 #include "PerspectiveCamera.h"
 #include "Triangle.h"
 #include "ObjMesh.h"
+#include "GLMTSphere.h"
 
 int CheckGLErrors(const char *s)
 {
@@ -66,7 +67,7 @@ int main(void)
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClearColor(0.5, 0.65, 0.43, 1.0);
 
     int fb_width, fb_height;
     glfwGetFramebufferSize(window, &fb_width, &fb_height);
@@ -89,7 +90,7 @@ int main(void)
     float far = -5.0f;
 
     // glm::mat4 M_ortho = glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, near, far);
-    vec3 m_pos(0,5,0), m_viewDir(0,0,-1);
+    vec3 m_pos(1, 2,0), m_viewDir(0,0,-1);
 
     PerspectiveCamera cam(fb_width, fb_height, m_pos, m_viewDir, 0.5f, 1.0f, 3.14159f/4.0f, 1.0f, 0.1f, 100.0f);
     glm::mat4 M_pers = cam.getPerspectiveMatrix();
@@ -115,17 +116,19 @@ int main(void)
     //      0.0f, 3.0f, 0.0f,     0.0f, 0.0f, 1.0f 
     // };     
 
-    // Triangle t(
-    //     vec3(-3.0f, -3.0f, 0.0f),
-    //     vec3(3.0f, -3.0f, 0.0f),
-    //     vec3(0.0f, 3.0f, 0.0f)
-    // );
+   
+    GLMSphere g(4);
+    std::vector<Triangle> triList = g.makeMesh(3);
+
     ObjMesh obj("../../src/json/abysswatchers.obj");
     std::vector< VertexPoint > host_VertexBuffer;
+    
+    // auto vb2 = t2.toVertexBuffer();
+    // host_VertexBuffer.insert(host_VertexBuffer.end(), vb2.begin(), vb2.end());
     // t.toVertexBuffer();
     
-    for(int i = 0; i < obj.getFaces().size(); i++) {
-        auto faces = obj.getFaces().at(i).toVertexBuffer();
+    for(int i = 0; i < triList.size(); i++) {
+        auto faces = triList.at(i).toVertexBuffer();
         host_VertexBuffer.insert(host_VertexBuffer.end(), faces.begin(), faces.end());
     }
 
@@ -164,8 +167,8 @@ int main(void)
     // Create a shader using my GLSLObject class                                                            
     sivelab::GLSLObject shader;
     // shader.addShader( "vertexShader_passthrough.glsl", sivelab::GLSLObject::VERTEX_SHADER );
-    shader.addShader( "vertexShader_normal.glsl", sivelab::GLSLObject::VERTEX_SHADER );
-    shader.addShader( "fragmentShader_normal.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
+    shader.addShader( "vertexShader_blinn.glsl", sivelab::GLSLObject::VERTEX_SHADER );
+    shader.addShader( "fragmentShader_blinn.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
     // shader.addShader( "fragmentShader_passthrough.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
     shader.createProgram();
 
@@ -210,6 +213,9 @@ int main(void)
 
     
     float rotationAngle = 0.0f;
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    
 
 
     while (!glfwWindowShouldClose(window))
@@ -228,7 +234,7 @@ int main(void)
         /* Render your objects here */
         shader.activate();
         modelTransform = glm::mat4(1.0);
-        modelTransform = glm::rotate(modelTransform, rotationAngle, glm::vec3(0, 1, 0));
+        modelTransform = glm::rotate(modelTransform, rotationAngle, glm::vec3(1, 1, 0));
 
         M_normal = glm::transpose(glm::inverse(modelTransform));
 

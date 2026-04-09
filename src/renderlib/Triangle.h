@@ -82,26 +82,15 @@ class Triangle : public Shape {
         }
 
         std::vector<VertexPoint> toVertexBuffer() {
-            VertexPoint vertA = {
-                glm::vec3(this->A.x(),this->A.y(), this->A.z()),
-                this->OpenGLNormal()
-            };
+            glm::vec3 normA = glm::normalize(glm::vec3(A.x(), A.y(), A.z()));
+            glm::vec3 normB = glm::normalize(glm::vec3(B.x(), B.y(), B.z()));
+            glm::vec3 normC = glm::normalize(glm::vec3(C.x(), C.y(), C.z()));
 
-            VertexPoint vertB = {
-                glm::vec3(this->B.x(),this->B.y(), this->B.z()),
-                this->OpenGLNormal()
-            };
+            VertexPoint vertA = { glm::vec3(A.x(), A.y(), A.z()), normA };
+            VertexPoint vertB = { glm::vec3(B.x(), B.y(), B.z()), normB };
+            VertexPoint vertC = { glm::vec3(C.x(), C.y(), C.z()), normC };
 
-            VertexPoint vertC = {
-                glm::vec3(this->C.x(),this->C.y(), this->C.z()),
-                this->OpenGLNormal()
-            };
-
-
-            return std::vector<VertexPoint>{
-                vertA, vertB, vertC
-            };
-
+            return std::vector<VertexPoint>{ vertA, vertB, vertC };
         }
 
         // const vec3& getColor() const override { return color; }
@@ -117,6 +106,10 @@ class Triangle : public Shape {
             box.update(C);
             return box;
         }
+
+        vec3 &getA()  { return A; }
+        vec3 &getB()  { return B; }
+        vec3 &getC()  { return C; }
 
 
 

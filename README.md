@@ -17,7 +17,7 @@ cmake --build ..
 ```
 my interactive camera uses WASD movement and the arrow keys to look around
 
-## To run and test my Silver image ratraced
+## To run and test my Silver image raytraced
 ```
 cd buildVCPKg
 cmake --build .

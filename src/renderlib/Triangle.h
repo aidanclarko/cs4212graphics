@@ -81,7 +81,7 @@ class Triangle : public Shape {
             return glm::vec3(normal.x(), normal.y(), normal.z());
         }
 
-        std::vector<VertexPoint> toVertexBuffer() {
+        std::vector<VertexPoint> toVertexBufferSphere() {
             glm::vec3 normA = glm::normalize(glm::vec3(A.x(), A.y(), A.z()));
             glm::vec3 normB = glm::normalize(glm::vec3(B.x(), B.y(), B.z()));
             glm::vec3 normC = glm::normalize(glm::vec3(C.x(), C.y(), C.z()));
@@ -89,6 +89,16 @@ class Triangle : public Shape {
             VertexPoint vertA = { glm::vec3(A.x(), A.y(), A.z()), normA };
             VertexPoint vertB = { glm::vec3(B.x(), B.y(), B.z()), normB };
             VertexPoint vertC = { glm::vec3(C.x(), C.y(), C.z()), normC };
+
+            return std::vector<VertexPoint>{ vertA, vertB, vertC };
+        }
+
+        std::vector<VertexPoint> toVertexBuffer() {
+            glm::vec3 norm = OpenGLNormal();
+
+            VertexPoint vertA = { glm::vec3(A.x(), A.y(), A.z()), norm };
+            VertexPoint vertB = { glm::vec3(B.x(), B.y(), B.z()), norm };
+            VertexPoint vertC = { glm::vec3(C.x(), C.y(), C.z()), norm };
 
             return std::vector<VertexPoint>{ vertA, vertB, vertC };
         }

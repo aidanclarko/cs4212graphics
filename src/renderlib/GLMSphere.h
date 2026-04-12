@@ -1,4 +1,4 @@
-#pragma once;
+#pragma once
 #include "Triangle.h"
 
 class GLMSphere {

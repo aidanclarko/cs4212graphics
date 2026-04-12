@@ -110,6 +110,30 @@ class Camera {
         void moveBack(float amount)    { pos = pos + W * amount; }
         void moveRight(float amount)   { pos = pos + U * amount; }
         void moveLeft(float amount)    { pos = pos - U * amount; }
+        
+        void rotateY(float amount) {
+            glm::vec3 gW(W.x(), W.y(), W.z());
+            glm::vec3 gV(V.x(), V.y(), V.z());
+            glm::vec3 gU(U.x(), U.y(), U.z());
+            glm::mat4 rotation = glm::rotate(glm::mat4(1.0), amount, gV);
+
+            gW = glm::vec3(rotation * glm::vec4(gW, 1.0));
+            gU = glm::vec3(rotation * glm::vec4(gU, 1.0));
+            this->W = vec3(gW.x, gW.y, gW.z);
+            this->U = vec3(gU.x, gU.y, gU.z);
+        }
+
+        void rotateX(float amount) {
+            glm::vec3 gW(W.x(), W.y(), W.z());
+            glm::vec3 gV(V.x(), V.y(), V.z());
+            glm::vec3 gU(U.x(), U.y(), U.z());
+            glm::mat4 rotation = glm::rotate(glm::mat4(1.0), amount, gU);
+
+            gW = glm::vec3(rotation * glm::vec4(gW, 1.0));
+            gU = glm::vec3(rotation * glm::vec4(gV, 1.0));
+            this->W = vec3(gW.x, gW.y, gW.z);
+            this->V = vec3(gV.x, gV.y, gV.z);
+        }
 
         
     protected:

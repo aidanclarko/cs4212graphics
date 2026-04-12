@@ -15,6 +15,17 @@ cd buildVCPkg/OpenGL
 cmake --build ..
 ./glfwExample
 ```
+my interactive camera uses WASD movement and the arrow keys to look around
+
+## To run and test my Silver image ratraced
+```
+cd buildVCPKg
+cmake --build .
+./src/render_main -w 600 -h 600 -r 4 -k 1 -i ../src/json/silver.json -o silver -b "0.38 0.502 0.71"
+
+```
+## Comparison Image Answer
+Looking at the images between the rasterizer and the ray tracer the big thing is the differences in shadows. It seems that the raytracer does a much more realistic job in the way it renders shadows the depth is more visually clear in the ray tracer, for the most part they look quite similar but the diffuse shading for blinn phong seems to be blending better in the ray tracer compared to the rasterizer as well.
 
 by default background color is white, and size is 100x100, rays 1, depth 4
 

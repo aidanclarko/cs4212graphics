@@ -1,0 +1,92 @@
+{
+    "scene": {
+	"camera": [{
+	    "position": "2.5 7 20",
+	    "viewDir": "-0.085 -0.25 -1",
+	    "focalLength": 1.0,
+	    "imagePlaneWidth": 0.5,
+	    "_name": "main",
+	    "_type": "perspective"
+	}
+          ],
+	"light": [{
+	    "position": "-7 4 5",
+        "intensity": "1.0 1.0 1.0",
+	    "_type": "point"
+	}],
+	"shader": [
+	    {
+		"diffuse": "0.263 0.678 0.306",
+		"specular": "1 1 1",
+		"phongExp": 120.0,
+		"_name": "sphereBlin",
+		"_type": "BlinnPhong"
+	    },
+        {
+		"diffuse": "0.486 0.176 0.702",
+		"specular": "1 1 1",
+		"phongExp": 80.0,
+		"_name": "triOne",
+		"_type": "BlinnPhong"
+	    },
+        {
+		"diffuse": "0.329 0.988 1",
+		"specular": "1 1 1",
+		"phongExp": 80.0,
+		"_name": "triTwo",
+		"_type": "BlinnPhong"
+	    },
+        {
+		"diffuse": "0.196 0.98 0.616",
+		"specular": "1 1 1",
+		"phongExp": 80.0,
+		"_name": "triThree",
+		"_type": "BlinnPhong"
+	    }
+	    
+	],
+	"shape": [
+	    {
+		"shader": {
+		    "_ref": "sphereBlin"
+		},
+		"center": "0.0 0.0 -5.0",
+		"radius": 2,
+		"_name": "sphere1",
+		"_type": "sphere"
+	    },
+
+	    {
+		"shader": {
+		    "_ref": "triOne"
+		},
+		"v0": "-4.0 -5.0 -8.0",
+		"v1": "4.0 -5.0 -8.0",
+		"v2": "0.0 5.0 -8.0",
+		"_name": "triangle1",
+		"_type": "triangle"
+	    },
+        {
+		"shader": {
+		    "_ref": "triTwo"
+		},
+		"v0": "-5.0 -2.0 -4.0",
+		"v1": "-2.0 -2.0 -4.0",
+		"v2": "-3.5 2.0 -6.0",
+		"_name": "triangle2",
+		"_type": "triangle"
+	    },
+        {
+		"shader": {
+		    "_ref": "triThree"
+		},
+		"v0": "2.0 -2.0 -4.0",
+		"v1": "5.0 -2.0 -4.0",
+		"v2": "3.5 2.0 -6.0",
+		"_name": "triangle3",
+		"_type": "triangle"
+	    }
+
+	]
+    }
+}

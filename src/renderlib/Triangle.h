@@ -11,6 +11,7 @@
 struct VertexPoint {
     glm::vec3 point;
     glm::vec3 normal;
+    glm::vec2 texCoords;
 };
 
 class Triangle : public Shape {
@@ -20,7 +21,7 @@ class Triangle : public Shape {
         Triangle(point3 A, point3 B, point3 C, vec3 color): A(A), B(B), C(C), color(color)  {}
         Triangle(point3 A, point3 B, point3 C, vec3 color, std::shared_ptr<Shader> s): A(A), B(B), C(C), color(color), shader(s)  {}
         Triangle(point3 A, point3 B, point3 C, std::shared_ptr<Shader> s): A(A), B(B), C(C), shader(s)  {}
-        
+        Triangle(point3 A, point3 B, point3 C, glm::vec2 uvA, glm::vec2 uvB, glm::vec2 uvC): A(A), B(B), C(C), uvA(uvA), uvB(uvB), uvC(uvC), color(vec3(1,1,1)) {}
         bool intersect(const Ray& r, const float tmin, float &tmax, HitStruct& hit) override {
             float a = A.x() - B.x();
             float b = A.y() - B.y();
@@ -86,9 +87,9 @@ class Triangle : public Shape {
             glm::vec3 normB = glm::normalize(glm::vec3(B.x(), B.y(), B.z()));
             glm::vec3 normC = glm::normalize(glm::vec3(C.x(), C.y(), C.z()));
 
-            VertexPoint vertA = { glm::vec3(A.x(), A.y(), A.z()), normA };
-            VertexPoint vertB = { glm::vec3(B.x(), B.y(), B.z()), normB };
-            VertexPoint vertC = { glm::vec3(C.x(), C.y(), C.z()), normC };
+            VertexPoint vertA = { glm::vec3(A.x(), A.y(), A.z()), normA, glm::vec2(0.0f, 0.0f) };
+            VertexPoint vertB = { glm::vec3(B.x(), B.y(), B.z()), normB, glm::vec2(0.5f, 1.0f) };
+            VertexPoint vertC = { glm::vec3(C.x(), C.y(), C.z()), normC, glm::vec2(1.0f, 0.0f) };
 
             return std::vector<VertexPoint>{ vertA, vertB, vertC };
         }
@@ -96,9 +97,9 @@ class Triangle : public Shape {
         std::vector<VertexPoint> toVertexBuffer() {
             glm::vec3 norm = OpenGLNormal();
 
-            VertexPoint vertA = { glm::vec3(A.x(), A.y(), A.z()), norm };
-            VertexPoint vertB = { glm::vec3(B.x(), B.y(), B.z()), norm };
-            VertexPoint vertC = { glm::vec3(C.x(), C.y(), C.z()), norm };
+            VertexPoint vertA = { glm::vec3(A.x(), A.y(), A.z()), norm, uvA };
+            VertexPoint vertB = { glm::vec3(B.x(), B.y(), B.z()), norm, uvB };
+            VertexPoint vertC = { glm::vec3(C.x(), C.y(), C.z()), norm, uvC };
 
             return std::vector<VertexPoint>{ vertA, vertB, vertC };
         }
@@ -129,6 +130,7 @@ class Triangle : public Shape {
         point3 C;
         vec3 color;
         std::shared_ptr<Shader> shader;
+        glm::vec2 uvA,uvB,uvC;
 };
 
 #endif

@@ -4,6 +4,7 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include "png++/png.hpp"
 
 #define GLM_FORCE_RADIANS
 #include "glm/glm.hpp"
@@ -101,11 +102,43 @@ int main(void)
     std::cout << "GL_MAJOR_VERSION: " << major_version << std::endl;
 
     GLuint m_triangleVBO[1], m_VAO;
-    
+
+    // textures
+
+    std::string textureFileName = "textureAtlas.png";
+    png::image<png::rgb_pixel> texPNGImage;
+    texPNGImage.read(textureFileName);
+
+    int pngWidth = texPNGImage.get_width();
+    int pngHeight = texPNGImage.get_height();
+
+    std::vector<float> texData(pngWidth * pngHeight * 3);
+
+    size_t idx = 0;
+    for(size_t row = 0; row < pngHeight; row++) {
+        for(size_t col = 0; col < pngWidth; col++) {
+            png::rgb_pixel pixel = texPNGImage[pngHeight - row - 1][col];
+            texData[idx++] = pixel.red / 255.0f;
+            texData[idx++] = pixel.green / 255.0f;
+            texData[idx++] = pixel.blue / 255.0f;
+        }
+    }
+
 
     // create a Vertex Array Buffer to hold our triangle data                                               
     glGenBuffers(1, m_triangleVBO);
     glBindBuffer(GL_ARRAY_BUFFER, m_triangleVBO[0]);
+    GLuint texID;
+    glGenTextures(1, &texID);
+    glBindTexture(GL_TEXTURE_2D, texID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 
+                pngWidth, pngHeight, 
+                0, GL_RGB, GL_FLOAT, texData.data());
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     // this is the actual triangle data that will be copied to                                              
     // the GPU memory
@@ -115,46 +148,58 @@ int main(void)
     //      3.0f, -3.0f, 0.0f,    0.0f, 1.0f, 0.0f,                                 
     //      0.0f, 3.0f, 0.0f,     0.0f, 0.0f, 1.0f 
     // };   
-    
+
+    //reused from initSquare() -> GLMSphere
+    float radius = 4;
+    vec3 v0 = unit_vector(vec3(-0.5, -0.5,  0.5)) * radius;
+    vec3 v1 = unit_vector(vec3( 0.5, -0.5,  0.5)) * radius;
+    vec3 v2 = unit_vector(vec3( 0.5,  0.5,  0.5)) * radius;
+    vec3 v3 = unit_vector(vec3(-0.5,  0.5,  0.5)) * radius;
+    vec3 v5 = unit_vector(vec3( 0.5, -0.5, -0.5)) * radius;
+    vec3 v6 = unit_vector(vec3( 0.5,  0.5, -0.5)) * radius;
 
     Triangle tri1(
-        point3(-4.0f, 5.0f, 5.0f),
-        point3(-4.0f, 11.0f, 2.5f),
-        point3(-8.0f, 5.0f, 2.5f)
+        v0, v1, v3,
+        glm::vec2(0.0f, 0.5f),
+        glm::vec2(0.5f, 0.5f),
+        glm::vec2(0.0f, 1.0f)
     );
 
     Triangle tri2(
-        point3(-4.0f, 11.0f, 2.5f),
-        point3(-4.0f, 5.0f, 5.0f),
-        point3(0.0f, 5.0f, 2.0f)
+        v1, v2, v3,
+        glm::vec2(0.5f, 0.5f),
+        glm::vec2(0.5f, 1.0f),
+        glm::vec2(0.0f, 1.0f)
     );
 
     Triangle tri3(
-        point3(-4.0f, 5.0f, 5.0f),
-        point3(-8.0f, 5.0f, 2.5f),
-        point3(-4.0f, -1.0f, 2.5f)
+        v1, v5, v2,
+        glm::vec2(0.5f, 0.5f),
+        glm::vec2(1.0f, 0.5f),
+        glm::vec2(0.5f, 1.0f)
     );
 
     Triangle tri4(
-        point3(-4.0f, 5.0f, 5.0f),
-        point3(-4.0f, -1.0f, 2.5f),
-        point3(0.0f, 5.0f, 2.0f)
+        v5, v6, v2,
+        glm::vec2(1.0f, 0.5f),
+        glm::vec2(1.0f, 1.0f),
+        glm::vec2(0.5f, 1.0f)
     );
-
    
-    GLMSphere g(2);
-    ObjMesh obj("../../src/json/hlcrow.obj");  
-    std::shared_ptr<std::vector<Triangle>> triList = std::make_shared<std::vector<Triangle>>(g.makeMesh(3));
-    int sphereIDX = triList->size();
+    // GLMSphere g(2);
+    // ObjMesh obj("../../src/json/hlcrow.obj");  
+    std::shared_ptr<std::vector<Triangle>> triList = std::make_shared<std::vector<Triangle>>();
+    // int sphereIDX = triList->size();
 
-    std::vector<Triangle>& objFaces = obj.getFaces();
-    triList->insert(triList->end(), objFaces.begin(), objFaces.end());
-    int objIDX = objFaces.size();
+    // std::vector<Triangle>& objFaces = obj.getFaces();
+    // triList->insert(triList->end(), objFaces.begin(), objFaces.end());
+    // int objIDX = objFaces.size();
   
     triList->push_back(tri1);
     triList->push_back(tri2);
     triList->push_back(tri3);
     triList->push_back(tri4);
+
 
     
     std::vector< VertexPoint > host_VertexBuffer;
@@ -164,14 +209,15 @@ int main(void)
     // t.toVertexBuffer();
     
     for(int i = 0; i < triList->size(); i++) {
-        if(i < sphereIDX) {
-            auto faces = triList->at(i).toVertexBufferSphere();
-            host_VertexBuffer.insert(host_VertexBuffer.end(), faces.begin(), faces.end());
-        } else {
+        // if(i < sphereIDX) {
+        //     auto faces = triList->at(i).toVertexBufferSphere();
+        //     host_VertexBuffer.insert(host_VertexBuffer.end(), faces.begin(), faces.end());
+        // } else {
             auto faces = triList->at(i).toVertexBuffer();
             host_VertexBuffer.insert(host_VertexBuffer.end(), faces.begin(), faces.end());
-        }
+        // }
     }
+
 
     int numBytes = host_VertexBuffer.size() * sizeof(VertexPoint);
 
@@ -183,7 +229,6 @@ int main(void)
     // once copied, we no longer need the data on the host (CPU) :) 
     int vertexCount = host_VertexBuffer.size();                                            
     host_VertexBuffer.clear();
-
     // create a vertex array object that will map the attributes in                                         
     // our vertex buffer to different location attributes for our                                           
     // shaders                                                                                              
@@ -201,6 +246,9 @@ int main(void)
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexPoint), (void*)offsetof(VertexPoint, normal));
 
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VertexPoint), (void*)offsetof(VertexPoint, texCoords));
+
     glBindVertexArray(0);
 
 
@@ -213,7 +261,7 @@ int main(void)
     // shader.addShader( "fragmentShader_passthrough.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
     shader.createProgram();
 
-    GLuint projMatrixID, viewMatrixID, modelMatrixID, normalMatrixID, lightPosID, diffID, camPosID, specularID, shininessID;
+    GLuint projMatrixID, viewMatrixID, modelMatrixID, normalMatrixID, lightPosID, diffID, camPosID, specularID, shininessID, texUnitID;
     projMatrixID = shader.createUniform( "projMatrix" );
     viewMatrixID = shader.createUniform( "viewMatrix" );
     modelMatrixID = shader.createUniform( "modelMatrix" );
@@ -223,6 +271,8 @@ int main(void)
     specularID = shader.createUniform( "specular" );
     shininessID = shader.createUniform( "shininess" );
     diffID = shader.createUniform( "diffuse" );
+    texUnitID = shader.createUniform( "texUnit" );
+
 
     glm::mat4 modelTransform = glm::mat4(1.0);
 
@@ -233,7 +283,7 @@ int main(void)
     glm::mat4 M_normal = glm::mat4(1.0);
 
 
-    glm::vec3 lightPos(-2, 3, 20);
+    glm::vec3 lightPos(-6, 2, 20);
     
 
     //Shader Components
@@ -283,13 +333,12 @@ int main(void)
         glm::mat4 M_view = cam.lookAt();
         /* Render your objects here */
         shader.activate();
-        // modelTransform = glm::rotate(modelTransform , rotationAngle, glm::vec3(0, 1, 0));
-
-        M_normal = glm::transpose(glm::inverse( modelTransform ));
-        
+    
 
         rotationAngle += 0.01;
         if(rotationAngle > 2.0 * 3.14159) rotationAngle = 0.0f;
+        modelTransform = glm::rotate(glm::mat4(1.0f), rotationAngle, glm::vec3(0, 1, 0));
+        M_normal = glm::transpose(glm::inverse( modelTransform ));
 
         glBindVertexArray(m_VAO);
 
@@ -303,89 +352,18 @@ int main(void)
         glUniform3fv(specularID, 1, glm::value_ptr(specular));
         glUniform1f(shininessID, shininess);
 
-
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texID);
+        glUniform1i(texUnitID, 0);
         
         // glDrawArrays(GL_TRIANGLES, 0, vertexCount);
-        
-        //Sphere
-        glm::mat4 sphereModel = glm::translate(glm::mat4(1.0f), glm::vec3(1, 8, 0));
-        glm::mat4 S_normal = glm::transpose(glm::inverse(sphereModel));
-        glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, glm::value_ptr( sphereModel ));
-        glUniformMatrix4fv(normalMatrixID, 1, GL_FALSE, glm::value_ptr( S_normal ));
-        glUniform3fv(diffID, 1, glm::value_ptr(diffuseSph));
-        glUniform3fv(specularID, 1, glm::value_ptr(specular));
-        glUniform1f(shininessID, shininess);
-        glDrawArrays(GL_TRIANGLES, 0, sphereIDX * 3);
-
-        glm::mat4 sphereModel2 = glm::translate(glm::mat4(1.0f), glm::vec3(-9, 8, 0));
-        glm::mat4 S_normal2 = glm::transpose(glm::inverse(sphereModel2));
-        glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, glm::value_ptr( sphereModel2 ));
-        glUniformMatrix4fv(normalMatrixID, 1, GL_FALSE, glm::value_ptr( S_normal2 ));
-        glUniform3fv(diffID, 1, glm::value_ptr(diffuseSphTwo));
-        glUniform3fv(specularID, 1, glm::value_ptr(specular));
-        glUniform1f(shininessID, shininess);
-        glDrawArrays(GL_TRIANGLES, 0, sphereIDX * 3);
-
-        //obj file
-        glm::mat4 objModel = glm::translate(glm::mat4(1.0f), glm::vec3(0,0,-3));
-        glm::mat4 c_normal = glm::transpose(glm::inverse(objModel));
-        glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, glm::value_ptr( objModel ));
-        glUniformMatrix4fv(normalMatrixID, 1, GL_FALSE, glm::value_ptr( c_normal ));
-        glUniform3fv(diffID, 1, glm::value_ptr(diffuseCrow));
-        glUniform3fv(specularID, 1, glm::value_ptr(specular));
-        glUniform1f(shininessID, shininess);
-        glDrawArrays(GL_TRIANGLES, sphereIDX * 3, objIDX * 3);
-
-        //mirror on x axis
-        glm::mat4 objModel2 = glm::translate(glm::mat4(1.0f), glm::vec3(-8, 0, -3)) * glm::scale(glm::mat4(1.0f), glm::vec3(-1, 1, 1));
-        glm::mat4 c_normal2 = glm::transpose(glm::inverse(objModel2));
-        glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, glm::value_ptr( objModel2 ));
-        glUniformMatrix4fv(normalMatrixID, 1, GL_FALSE, glm::value_ptr( c_normal2 ));
-        glUniform3fv(diffID, 1, glm::value_ptr(diffuseCrow));
-        glUniform3fv(specularID, 1, glm::value_ptr(specular));
-        glUniform1f(shininessID, shininess);
-        glDrawArrays(GL_TRIANGLES, sphereIDX * 3, objIDX * 3);
 
         //triangle objs
-        glm::mat4 tris1 = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0));
-        glm::mat4 tris1_normal = glm::transpose(glm::inverse(tris1));
-        glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, glm::value_ptr(tris1));
-        glUniformMatrix4fv(normalMatrixID, 1, GL_FALSE, glm::value_ptr(tris1_normal));
+        glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, glm::value_ptr(modelTransform));
+        glUniformMatrix4fv(normalMatrixID, 1, GL_FALSE, glm::value_ptr(M_normal));
         glUniform3fv(diffID, 1, glm::value_ptr(diffuseTriThree));
-        glDrawArrays(GL_TRIANGLES, sphereIDX * 3 + objIDX * 3, 12);
+        glDrawArrays(GL_TRIANGLES, 0, 12);
 
-     
-        glm::mat4 tris2 = glm::translate(glm::mat4(1.0f), glm::vec3(5, 1, 0)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.5f));
-        glm::mat4 tris2_normal = glm::transpose(glm::inverse(tris2));
-        glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, glm::value_ptr(tris2));
-        glUniformMatrix4fv(normalMatrixID, 1, GL_FALSE, glm::value_ptr(tris2_normal));
-        glUniform3fv(diffID, 1, glm::value_ptr(diffuseTriTwo));
-        glDrawArrays(GL_TRIANGLES, sphereIDX * 3 + objIDX * 3, 12);
-
-   
-        glm::mat4 tris3 = glm::translate(glm::mat4(1.0f), glm::vec3(8, 2, 0)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.25f));
-        glm::mat4 tris3_normal = glm::transpose(glm::inverse(tris3));
-        glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, glm::value_ptr(tris3));
-        glUniformMatrix4fv(normalMatrixID, 1, GL_FALSE, glm::value_ptr(tris3_normal));
-        glUniform3fv(diffID, 1, glm::value_ptr(diffuseTriOne));
-        glDrawArrays(GL_TRIANGLES, sphereIDX * 3 + objIDX * 3, 12);
-
-
-      
-        glm::mat4 tris4 = glm::translate(glm::mat4(1.0f), glm::vec3(-9, 1, 0)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.5f));
-        glm::mat4 tris4_normal = glm::transpose(glm::inverse(tris4));
-        glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, glm::value_ptr(tris4));
-        glUniformMatrix4fv(normalMatrixID, 1, GL_FALSE, glm::value_ptr(tris4_normal));
-        glUniform3fv(diffID, 1, glm::value_ptr(diffuseTriOne));
-        glDrawArrays(GL_TRIANGLES, sphereIDX * 3 + objIDX * 3, 12);
-
-     
-        glm::mat4 tris5 = glm::translate(glm::mat4(1.0f), glm::vec3(-14, 2, 0)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.25f));
-        glm::mat4 tris5_normal = glm::transpose(glm::inverse(tris5));
-        glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, glm::value_ptr(tris5));
-        glUniformMatrix4fv(normalMatrixID, 1, GL_FALSE, glm::value_ptr(tris5_normal));
-        glUniform3fv(diffID, 1, glm::value_ptr(diffuseTriTwo));
-        glDrawArrays(GL_TRIANGLES, sphereIDX * 3 + objIDX * 3, 12);
 
 
         glBindVertexArray(0);

@@ -8,7 +8,9 @@ add_library (cs4212-renderlib
   Shape.h Sphere.h
   Scene.cpp Scene.h
   Shader.cpp Shader.h
-  SceneParser_JSON.cpp 
+  SceneParser_JSON.cpp
+  Particles.h 
+  Fireworks.h
 )
 
 target_link_libraries(cs4212-renderlib PUBLIC PNG::PNG)

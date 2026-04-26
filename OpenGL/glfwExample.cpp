@@ -18,6 +18,17 @@
 #include "Triangle.h"
 #include "ObjMesh.h"
 #include "GLMSphere.h"
+#include "render_helpers.h"
+
+struct Particle {
+    glm::vec4 pos;
+    glm::vec4 color;
+    float life_span;
+    glm::vec4 velocity;
+    glm::vec4 gravity;
+    float index;
+    float expTime;
+};
 
 int CheckGLErrors(const char *s)
 {
@@ -68,7 +79,7 @@ int main(void)
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glClearColor(0.38, 0.502, 0.71, 1.0);
+    glClearColor(0, 0, 0, 1.0);
 
     int fb_width, fb_height;
     glfwGetFramebufferSize(window, &fb_width, &fb_height);
@@ -91,7 +102,8 @@ int main(void)
     float far = -5.0f;
 
     // glm::mat4 M_ortho = glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, near, far);
-    vec3 m_pos(1, 2,0), m_viewDir(0,0,-1);
+    vec3 m_pos(2, 2, 3);        // off to the side and up
+    vec3 m_viewDir(-0.4, -0.4, -1);  // looking toward origin   
 
     PerspectiveCamera cam(fb_width, fb_height, m_pos, m_viewDir, 0.5f, 1.0f, 3.14159f/4.0f, 1.0f, 0.1f, 100.0f);
     glm::mat4 M_pers = cam.getPerspectiveMatrix();
@@ -101,165 +113,191 @@ int main(void)
     glGetIntegerv(GL_MAJOR_VERSION, &major_version);
     std::cout << "GL_MAJOR_VERSION: " << major_version << std::endl;
 
-    GLuint m_triangleVBO[1], m_VAO;
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // textures
+    std::vector<Particle> particles(10000);
+    std::vector<Particle> particles2(10000);
 
-    std::string textureFileName = "textureAtlas.png";
-    png::image<png::rgb_pixel> texPNGImage;
-    texPNGImage.read(textureFileName);
+    for(auto i = 0; i < particles.size(); i++) {
+        float phi = random_float(0.0, 2 * M_PI);
+        float theta = random_float(0.0, M_PI);
+        float size = random_float(0.02, 0.01);
+        
+        particles[i].pos = glm::vec4(
+            0, 0, -10,
+            1
+        );
+        particles[i].color = glm::vec4(0.23,0.85,0.0,1);
 
-    int pngWidth = texPNGImage.get_width();
-    int pngHeight = texPNGImage.get_height();
-
-    std::vector<float> texData(pngWidth * pngHeight * 3);
-
-    size_t idx = 0;
-    for(size_t row = 0; row < pngHeight; row++) {
-        for(size_t col = 0; col < pngWidth; col++) {
-            png::rgb_pixel pixel = texPNGImage[pngHeight - row - 1][col];
-            texData[idx++] = pixel.red / 255.0f;
-            texData[idx++] = pixel.green / 255.0f;
-            texData[idx++] = pixel.blue / 255.0f;
-        }
+        particles[i].velocity = glm::vec4(
+            size * sin(theta) * cos(phi),
+            size * sin(theta) * sin(phi),
+            size * cos(theta),
+            0.0f
+        );
+        particles[i].gravity = glm::vec4(0.0, -0.00001, 0.0, 0.0);
+        particles[i].life_span = random_float(1, 5);
+        particles[i].index = float(i);
+        particles[i].expTime = 3.0f;
     }
 
+    for(auto i = 0; i < particles2.size(); i++) {
+        float phi = random_float(0.0, 2 * M_PI);
+        float theta = random_float(0.0, M_PI);
+        float size = random_float(0.02, 0.01);
+        
+        particles2[i].pos = glm::vec4(
+            -10, 0, -20,
+            1
+        );
+        particles2[i].color = glm::vec4(0.75,0.25,0.0,1);
 
-    // create a Vertex Array Buffer to hold our triangle data                                               
-    glGenBuffers(1, m_triangleVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, m_triangleVBO[0]);
-    GLuint texID;
-    glGenTextures(1, &texID);
-    glBindTexture(GL_TEXTURE_2D, texID);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 
-                pngWidth, pngHeight, 
-                0, GL_RGB, GL_FLOAT, texData.data());
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    // this is the actual triangle data that will be copied to                                              
-    // the GPU memory
-    //bunny raw data could easily be implemented here                                                                                       
-    // std::vector< float > host_VertexBuffer{
-    //     -3.0f, -3.0f, 0.0f,    1.0f , 0.0f, 0.0f,                             
-    //      3.0f, -3.0f, 0.0f,    0.0f, 1.0f, 0.0f,                                 
-    //      0.0f, 3.0f, 0.0f,     0.0f, 0.0f, 1.0f 
-    // };   
-
-    //reused from initSquare() -> GLMSphere
-    float radius = 4;
-    vec3 v0 = unit_vector(vec3(-0.5, -0.5,  0.5)) * radius;
-    vec3 v1 = unit_vector(vec3( 0.5, -0.5,  0.5)) * radius;
-    vec3 v2 = unit_vector(vec3( 0.5,  0.5,  0.5)) * radius;
-    vec3 v3 = unit_vector(vec3(-0.5,  0.5,  0.5)) * radius;
-    vec3 v5 = unit_vector(vec3( 0.5, -0.5, -0.5)) * radius;
-    vec3 v6 = unit_vector(vec3( 0.5,  0.5, -0.5)) * radius;
-
-    Triangle tri1(
-        v0, v1, v3,
-        glm::vec2(0.0f, 0.5f),
-        glm::vec2(0.5f, 0.5f),
-        glm::vec2(0.0f, 1.0f)
-    );
-
-    Triangle tri2(
-        v1, v2, v3,
-        glm::vec2(0.5f, 0.5f),
-        glm::vec2(0.5f, 1.0f),
-        glm::vec2(0.0f, 1.0f)
-    );
-
-    Triangle tri3(
-        v1, v5, v2,
-        glm::vec2(0.5f, 0.5f),
-        glm::vec2(1.0f, 0.5f),
-        glm::vec2(0.5f, 1.0f)
-    );
-
-    Triangle tri4(
-        v5, v6, v2,
-        glm::vec2(1.0f, 0.5f),
-        glm::vec2(1.0f, 1.0f),
-        glm::vec2(0.5f, 1.0f)
-    );
-   
-    // GLMSphere g(2);
-    // ObjMesh obj("../../src/json/hlcrow.obj");  
-    std::shared_ptr<std::vector<Triangle>> triList = std::make_shared<std::vector<Triangle>>();
-    // int sphereIDX = triList->size();
-
-    // std::vector<Triangle>& objFaces = obj.getFaces();
-    // triList->insert(triList->end(), objFaces.begin(), objFaces.end());
-    // int objIDX = objFaces.size();
-  
-    triList->push_back(tri1);
-    triList->push_back(tri2);
-    triList->push_back(tri3);
-    triList->push_back(tri4);
-
-
-    
-    std::vector< VertexPoint > host_VertexBuffer;
-    
-    // auto vb2 = t2.toVertexBuffer();
-    // host_VertexBuffer.insert(host_VertexBuffer.end(), vb2.begin(), vb2.end());
-    // t.toVertexBuffer();
-    
-    for(int i = 0; i < triList->size(); i++) {
-        // if(i < sphereIDX) {
-        //     auto faces = triList->at(i).toVertexBufferSphere();
-        //     host_VertexBuffer.insert(host_VertexBuffer.end(), faces.begin(), faces.end());
-        // } else {
-            auto faces = triList->at(i).toVertexBuffer();
-            host_VertexBuffer.insert(host_VertexBuffer.end(), faces.begin(), faces.end());
-        // }
+        particles2[i].velocity = glm::vec4(
+            size * sin(theta) * cos(phi),
+            size * sin(theta) * sin(phi),
+            size * cos(theta),
+            0.0f
+        );
+        particles2[i].gravity = glm::vec4(0.0, -0.00001, 0.0, 0.0);
+        particles2[i].life_span = random_float(1, 5);
+        particles2[i].index = float(i);
+        particles2[i].expTime = 5.0f;
     }
+    //initialize vars
+    GLuint particleVBO[2], particleVAO[2], particleVBO2[2], particleVAO2[2], tfo[2], tfo2[2];
+    
+    glGenBuffers(2, particleVBO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, particleVBO[0]);
+    glBufferData(GL_ARRAY_BUFFER, particles.size() * sizeof(Particle), particles.data(), GL_DYNAMIC_COPY);
+
+    glBindBuffer(GL_ARRAY_BUFFER, particleVBO[1]);
+    glBufferData(GL_ARRAY_BUFFER, particles.size() * sizeof(Particle), particles.data(), GL_DYNAMIC_COPY);
+
+    glGenBuffers(2, particleVBO2);
+
+    glBindBuffer(GL_ARRAY_BUFFER, particleVBO2[0]);
+    glBufferData(GL_ARRAY_BUFFER, particles2.size() * sizeof(Particle), particles2.data(), GL_DYNAMIC_COPY);
+
+    glBindBuffer(GL_ARRAY_BUFFER, particleVBO2[1]);
+    glBufferData(GL_ARRAY_BUFFER, particles2.size() * sizeof(Particle), particles2.data(), GL_DYNAMIC_COPY);
 
 
-    int numBytes = host_VertexBuffer.size() * sizeof(VertexPoint);
 
-    // copy the numBytes from host_VertexBuffer t the GPU and store in                                      
-    // the currently bound VBO                                                                              
-    glBufferData(GL_ARRAY_BUFFER, numBytes, host_VertexBuffer.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // once copied, we no longer need the data on the host (CPU) :) 
-    int vertexCount = host_VertexBuffer.size();                                            
-    host_VertexBuffer.clear();
     // create a vertex array object that will map the attributes in                                         
     // our vertex buffer to different location attributes for our                                           
     // shaders                                                                                              
-    glGenVertexArrays(1, &m_VAO);
-    glBindVertexArray(m_VAO);
+    glGenVertexArrays(2, particleVAO);
 
-    // VAO details here - we only have 1 attribute or location                                              
-    // (Position of the vertex)    
-    
-    glBindBuffer(GL_ARRAY_BUFFER, m_triangleVBO[0]);
-
+    glBindVertexArray(particleVAO[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, particleVBO[0]);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexPoint), (void*)offsetof(VertexPoint, point));
-
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, pos));
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexPoint), (void*)offsetof(VertexPoint, normal));
-
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, color));
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VertexPoint), (void*)offsetof(VertexPoint, texCoords));
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, life_span));
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, velocity));
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, gravity));
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, index));
+    glEnableVertexAttribArray(6);
+    glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, expTime));
+
+    glBindVertexArray(particleVAO[1]);
+    glBindBuffer(GL_ARRAY_BUFFER, particleVBO[1]);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, pos));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, color));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, life_span));
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, velocity));
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, gravity));
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, index));
+    glEnableVertexAttribArray(6);
+    glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, expTime));
+
+    glGenVertexArrays(2, particleVAO2);
+
+    glBindVertexArray(particleVAO2[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, particleVBO2[0]);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, pos));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, color));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, life_span));
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, velocity));
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, gravity));
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, index));
+    glEnableVertexAttribArray(6);
+    glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, expTime));
+
+    glBindVertexArray(particleVAO2[1]);
+    glBindBuffer(GL_ARRAY_BUFFER, particleVBO2[1]);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, pos));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, color));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, life_span));
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, velocity));
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, gravity));
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, index));
+    glEnableVertexAttribArray(6);
+    glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, expTime));
+
 
     glBindVertexArray(0);
 
+    // transform feedback buffer, allows the two particle vbos to be transferred back to host
+    glGenTransformFeedbacks(2, tfo);
+    glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, tfo[0]);
+    glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, particleVBO[1]);
+
+    glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, tfo[1]);
+    glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, particleVBO[0]);
+
+    glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
+
+    glGenTransformFeedbacks(2, tfo2);
+    glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, tfo2[0]);
+    glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, particleVBO2[1]);
+
+    glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, tfo2[1]);
+    glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, particleVBO2[0]);
+
+    glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
 
 
     // Create a shader using my GLSLObject class                                                            
-    sivelab::GLSLObject shader;
-    // shader.addShader( "vertexShader_passthrough.glsl", sivelab::GLSLObject::VERTEX_SHADER );
-    shader.addShader( "vertexShader_blinn.glsl", sivelab::GLSLObject::VERTEX_SHADER );
-    shader.addShader( "fragmentShader_blinn.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
-    // shader.addShader( "fragmentShader_passthrough.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
+    sivelab::GLSLObject shader, updateShader;
+    
+    shader.addShader( "vertexShader_particles.glsl", sivelab::GLSLObject::VERTEX_SHADER );
+    shader.addShader( "fragmentShader_particles.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
     shader.createProgram();
+    
+
+    updateShader.addShader("vertexShader_update.glsl", sivelab::GLSLObject::VERTEX_SHADER);
+    updateShader.addShader("fragmentShader_discard.glsl", sivelab::GLSLObject::FRAGMENT_SHADER);
+    GLuint updateProgram = updateShader.createProgram();
+
+    const char* varyings[] = { "out_pos", "out_color", "out_life_span", "out_velocity", "out_gravity", "out_index", "out_expTime" };
+    glTransformFeedbackVaryings(updateProgram, 7, varyings, GL_INTERLEAVED_ATTRIBS);
+    glLinkProgram(updateProgram); 
+    
 
     GLuint projMatrixID, viewMatrixID, modelMatrixID, normalMatrixID, lightPosID, diffID, camPosID, specularID, shininessID, texUnitID;
     projMatrixID = shader.createUniform( "projMatrix" );
@@ -300,14 +338,6 @@ int main(void)
 
     double timeDiff = 0.0, startFrameTime = 0.0, endFrameTime = 0.0;
 
-    
-    
-    /* Loop until the user closes the window */
-    /* game loop above is initialization getting itn on gpu, load
-        scene file 
-        todo: load triangle
-    
-    */
 
     
     float rotationAngle = 0.0f;
@@ -317,6 +347,8 @@ int main(void)
     
     float camAngle = 0.0f;
 
+   int current = 0;
+   glEnable(GL_PROGRAM_POINT_SIZE);
 
     while (!glfwWindowShouldClose(window))
     {  
@@ -329,45 +361,46 @@ int main(void)
         // Clear the window's buffer (or clear the screen to our
         // background color)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_RASTERIZER_DISCARD);
 
         glm::mat4 M_view = cam.lookAt();
-        /* Render your objects here */
-        shader.activate();
-    
-
-        rotationAngle += 0.01;
-        if(rotationAngle > 2.0 * 3.14159) rotationAngle = 0.0f;
-        modelTransform = glm::rotate(glm::mat4(1.0f), rotationAngle, glm::vec3(0, 1, 0));
         M_normal = glm::transpose(glm::inverse( modelTransform ));
+        /* Render your objects here */
+        updateShader.activate();
 
-        glBindVertexArray(m_VAO);
+        glBindVertexArray(particleVAO[current]);
+        glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, tfo[current]);
+        glBeginTransformFeedback(GL_POINTS);
+        glDrawArrays(GL_POINTS, 0, particles.size());
+        glEndTransformFeedback();
 
-        // copy from the host to the device the view matrix and the projection matrix                                                                                       
-        glUniformMatrix4fv(projMatrixID, 1, GL_FALSE, glm::value_ptr( M_pers ));
-        glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, glm::value_ptr( M_view ));
-        // glUniformMatrix4fv(normalMatrixID, 1, GL_FALSE, glm::value_ptr( M_normal ));
-        glUniform3fv(lightPosID, 1, glm::value_ptr(lightPos));
-        glUniform3fv(camPosID, 1, glm::value_ptr(camPos));
-        // glUniform3fv(diffID, 1, glm::value_ptr(diffuse));
-        glUniform3fv(specularID, 1, glm::value_ptr(specular));
-        glUniform1f(shininessID, shininess);
+        glBindVertexArray(particleVAO2[current]);
+        glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, tfo2[current]);
+        glBeginTransformFeedback(GL_POINTS);
+        glDrawArrays(GL_POINTS, 0, particles2.size());
+        glEndTransformFeedback();
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texID);
-        glUniform1i(texUnitID, 0);
+
         
-        // glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+        updateShader.deactivate();
+        glDisable(GL_RASTERIZER_DISCARD);
+                                                                                    
+        int next = 1 - current;
 
-        //triangle objs
-        glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, glm::value_ptr(modelTransform));
-        glUniformMatrix4fv(normalMatrixID, 1, GL_FALSE, glm::value_ptr(M_normal));
-        glUniform3fv(diffID, 1, glm::value_ptr(diffuseTriThree));
-        glDrawArrays(GL_TRIANGLES, 0, 12);
+        shader.activate();
+        glUniformMatrix4fv(projMatrixID, 1, GL_FALSE, glm::value_ptr(M_pers));
+        glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, glm::value_ptr(M_view));
 
+        glBindVertexArray(particleVAO[next]);
+        glDrawArrays(GL_POINTS, 0, particles.size());
+
+        glBindVertexArray(particleVAO2[next]);
+        glDrawArrays(GL_POINTS, 0, particles2.size());
 
 
         glBindVertexArray(0);
         shader.deactivate();
+        current = next;
 
         // Swap the front and back buffers
         glfwSwapBuffers(window);

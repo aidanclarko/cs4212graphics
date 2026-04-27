@@ -1,0 +1,98 @@
+#pragma once
+#include "Particles.h"
+#include "ObjMesh.h"
+#include "vec3.h"
+#include "render_helpers.h"
+
+struct Obj {
+    glm::vec4 pos;
+    glm::vec4 color;
+    float life_span;
+    glm::vec4 velocity;
+    glm::vec4 gravity;
+    float index;
+    glm::vec4 prevPos;
+};
+
+
+class ParticleObj : public Particles<Obj> {
+public:
+    // two instances of loading obj file... FIX
+    ParticleObj(std::string fileName, glm::vec4 color, glm::vec4 gravity, float lifeSpan, int density)
+        : Particles(loadVertices(fileName).size() * density), vertices(loadVertices(fileName)), color(color),
+          gravity(gravity), lifeSpan(lifeSpan), fileName(fileName), density(density) {
+            particles = std::vector<Obj>(vertices.size() * density);
+          }
+
+    std::vector<vec3> loadVertices(const std::string& fileName) {
+        ObjMesh obj(fileName);
+        return obj.getVerticies();
+    }
+
+   void initParticles() override {
+        int p = 0;
+        for(int i = 0; i < vertices.size(); i++) {
+            for(int d = 0; d < density; d++) {
+                float x = vertices[i].x() + random_float(-0.1f, 0.5f);
+                float y = vertices[i].y() + random_float(-0.1f, 0.5f);
+                float z = vertices[i].z() + random_float(-0.1f, 0.5f);
+
+                particles[p].prevPos = glm::vec4(x, y, z, 1.0f);
+                particles[p].pos = glm::vec4(x, y, z, 1);
+                particles[p].color = color;
+                particles[p].velocity = glm::vec4(0.5, -0.01, 50.0, 0);
+                particles[p].gravity = gravity;
+                particles[p].life_span = random_float(1, lifeSpan);
+                particles[p].index = float(p);
+                p++;
+            }
+        }
+    }
+
+    void setupAttributes() override {
+        glGenVertexArrays(2, vao);
+        for(int i = 0; i < 2; i++) {
+            glBindVertexArray(vao[i]);
+            glBindBuffer(GL_ARRAY_BUFFER, vbo[i]);
+            glEnableVertexAttribArray(0);
+            glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Obj), (void*)offsetof(Obj, pos));
+            glEnableVertexAttribArray(1);
+            glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Obj), (void*)offsetof(Obj, color));
+            glEnableVertexAttribArray(2);
+            glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(Obj), (void*)offsetof(Obj, life_span));
+            glEnableVertexAttribArray(3);
+            glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Obj), (void*)offsetof(Obj, velocity));
+            glEnableVertexAttribArray(4);
+            glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Obj), (void*)offsetof(Obj, gravity));
+            glEnableVertexAttribArray(5);
+            glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(Obj), (void*)offsetof(Obj, index));
+            glEnableVertexAttribArray(6);
+            glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(Obj), (void*)offsetof(Obj, prevPos));
+        }
+        glBindVertexArray(0);
+    }
+
+    void initDrawShader(sivelab::GLSLObject& shader) override {
+        shader.addShader( "vertexShader_particles.glsl", sivelab::GLSLObject::VERTEX_SHADER );
+        shader.addShader( "fragmentShader_particles.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
+        shader.createProgram();
+    }
+
+    void initUpdateShader(sivelab::GLSLObject& updateShader) override {
+        updateShader.addShader("vertexShader_update_test.glsl", sivelab::GLSLObject::VERTEX_SHADER);
+        updateShader.addShader("fragmentShader_discard.glsl", sivelab::GLSLObject::FRAGMENT_SHADER);
+        GLuint updateProgram = updateShader.createProgram();
+
+        const char* varyings[] = { "out_pos", "out_color", "out_life_span", "out_velocity", "out_gravity", "out_index", "out_prevPos" };
+        glTransformFeedbackVaryings(updateProgram, 7, varyings, GL_INTERLEAVED_ATTRIBS);
+        glLinkProgram(updateProgram); 
+    }
+
+private:
+    int density;
+    std::string fileName;
+    glm::vec4 color;
+    glm::vec4 gravity;
+    float lifeSpan;
+    std::vector<vec3> vertices;
+};

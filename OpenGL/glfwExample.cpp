@@ -20,6 +20,7 @@
 #include "GLMSphere.h"
 #include "render_helpers.h"
 #include "Fireworks.h"
+#include "ParticleObj.h"
 
 int CheckGLErrors(const char *s)
 {
@@ -93,7 +94,7 @@ int main(void)
     float far = -5.0f;
 
     // glm::mat4 M_ortho = glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, near, far);
-    vec3 m_pos(0, 0, 3);  
+    vec3 m_pos(0, 10, 40);  
     vec3 m_viewDir(0, 0, -1);
 
     PerspectiveCamera cam(fb_width, fb_height, m_pos, m_viewDir, 0.5f, 1.0f, 3.14159f/4.0f, 1.0f, 0.1f, 100.0f);
@@ -106,54 +107,71 @@ int main(void)
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    Firework f1(
+    ParticleObj f1(
+        "../../src/json/hand.obj",
+        glm::vec4(1, 1, 1, 1),
+        glm::vec4(0.0, -0.0002, 0, 0),
+        6.0f, 500
+    );
+
+    Fireworks f2(
         10000,
-        glm::vec4(1.0, 0.0, 0.0, 0.0),
-        glm::vec4(0, 0, -10, 1),
-        glm::vec4(0.0, -0.00001, 0.0, 0.0),
-        5, 3, 3, 0.01
+        glm::vec4(1, 0, 1, 1),
+        glm::vec4(-10, 0, 3, 1),
+        glm::vec4(0, -0.00001, 0, 0),
+        4.0f, 5, 5, 10
     );
 
-    Firework f2(
-        1000000,
-        glm::vec4(0.0, 1.0, 0.0, 0.0),
-        glm::vec4(-5, 0, -20, 1),
-        glm::vec4(0.0, -0.000002, 0.0, 0.0),
-        5, 4, 5, 0.01
+    Fireworks f3(
+        100000,
+        glm::vec4(0, 0, 1, 1),
+        glm::vec4(10, 0, 3, 1),
+        glm::vec4(0, -0.0001, 0, 0),
+        4.0f, 5, 3, 20
     );
 
-    Firework f3(
-        1000,
-        glm::vec4(0.0, 1.0, 1.0, 0.0),
-        glm::vec4(4, 0, -5, 1),
-        glm::vec4(0.0, -0.00025, 0.0, 0.0),
-        5, 3, 0, 0.002
+    Fireworks f4(
+        100000,
+        glm::vec4(0, 1, 1, 1),
+        glm::vec4(12, 0, 3, 1),
+        glm::vec4(0, -0.0001, 0, 0),
+        10.0f, 6, 5, 50
     );
+
+    Fireworks f5(
+        100000,
+        glm::vec4(1, 1, 0, 1),
+        glm::vec4(-12, 0, -1, 1),
+        glm::vec4(0, -0.0001, 0, 0),
+        6.0f, 6, 5, 50
+    );
+    
 
     f1.initParticles();
     f2.initParticles();
     f3.initParticles();
+    f4.initParticles();
+    f5.initParticles();
+
     f1.initBuffers();
     f2.initBuffers();
     f3.initBuffers();
+    f4.initBuffers();
+    f5.initBuffers();
 
+    f1.setupAttributes();
+    f2.setupAttributes();
+    f3.setupAttributes();
+    f4.setupAttributes();
+    f5.setupAttributes();
 
+    // Create a shader using my GLSLObject class                                                  
+    sivelab::GLSLObject shader, updateShaderHand, updateShaderFirework;
+    f1.initDrawShader(shader);
 
-    // Create a shader using my GLSLObject class                                                            
-    sivelab::GLSLObject shader, updateShader;
-    
-    shader.addShader( "vertexShader_particles.glsl", sivelab::GLSLObject::VERTEX_SHADER );
-    shader.addShader( "fragmentShader_particles.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
-    shader.createProgram();
-    
+    f1.initUpdateShader(updateShaderHand);
+    f2.initUpdateShader(updateShaderFirework);
 
-    updateShader.addShader("vertexShader_update.glsl", sivelab::GLSLObject::VERTEX_SHADER);
-    updateShader.addShader("fragmentShader_discard.glsl", sivelab::GLSLObject::FRAGMENT_SHADER);
-    GLuint updateProgram = updateShader.createProgram();
-
-    const char* varyings[] = { "out_pos", "out_color", "out_life_span", "out_velocity", "out_gravity", "out_index", "out_expTime", "out_fireworkTimer" };
-    glTransformFeedbackVaryings(updateProgram, 8, varyings, GL_INTERLEAVED_ATTRIBS);
-    glLinkProgram(updateProgram); 
     
 
     GLuint projMatrixID, viewMatrixID, modelMatrixID, normalMatrixID, lightPosID, diffID, camPosID, specularID, shininessID, texUnitID;
@@ -223,12 +241,16 @@ int main(void)
         glm::mat4 M_view = cam.lookAt();
         M_normal = glm::transpose(glm::inverse( modelTransform ));
         /* Render your objects here */
-        updateShader.activate();
+        updateShaderHand.activate();
         f1.update(current);
+        updateShaderHand.deactivate();
+
+        updateShaderFirework.activate();
         f2.update(current);
         f3.update(current);
-
-        updateShader.deactivate();
+        f4.update(current);
+        f5.update(current);
+        updateShaderFirework.deactivate();
         glDisable(GL_RASTERIZER_DISCARD);
                                                                                     
         int next = 1 - current;
@@ -239,6 +261,8 @@ int main(void)
         f1.draw(next);
         f2.draw(next);
         f3.draw(next);
+        f4.draw(next);
+        f5.draw(next);
 
         glBindVertexArray(0);
         shader.deactivate();

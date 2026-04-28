@@ -100,6 +100,63 @@ int main(void)
     glGetIntegerv(GL_MAJOR_VERSION, &major_version);
     std::cout << "GL_MAJOR_VERSION: " << major_version << std::endl;
 
+
+    GLuint fboID, fboTextureID, fboRBOID;
+
+    // Generate FBO
+    glGenFramebuffers(1, &fboID);
+    glBindFramebuffer(GL_FRAMEBUFFER, fboID);
+
+    // Create color texture attachment
+    glGenTextures(1, &fboTextureID);
+    glBindTexture(GL_TEXTURE_2D, fboTextureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, fb_width, fb_height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fboTextureID, 0);
+
+    // Create depth renderbuffer
+    glGenRenderbuffers(1, &fboRBOID);
+    glBindRenderbuffer(GL_RENDERBUFFER, fboRBOID);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, fb_width, fb_height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, fboRBOID);
+
+    // Check FBO completeness
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cerr << "Framebuffer is not complete!" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+    GLuint screenQuadVBO, screenQuadVAO;
+  
+    // Screen quad vertices: (position xy, texcoord xy)
+    std::vector<float> screenQuadVertices = {
+        // positions        // texCoords
+        -1.0f,  1.0f,        0.0f, 1.0f,  // Top Left (V0)
+        -1.0f, -1.0f,        0.0f, 0.0f,  // Bottom Left (V1)
+        1.0f,  1.0f,        1.0f, 1.0f,  // Top Right (V2)
+        1.0f, -1.0f,        1.0f, 0.0f   // Bottom Right (V3)
+    };
+
+    glGenBuffers(1, &screenQuadVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, screenQuadVBO);
+    glBufferData(GL_ARRAY_BUFFER, screenQuadVertices.size() * sizeof(float), screenQuadVertices.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glGenVertexArrays(1, &screenQuadVAO);
+    glBindVertexArray(screenQuadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, screenQuadVBO);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (const GLvoid *)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (const GLvoid *)(2 * sizeof(float)));
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
     GLuint m_triangleVBO[1], m_VAO;
     
 
@@ -208,8 +265,8 @@ int main(void)
     // Create a shader using my GLSLObject class                                                            
     sivelab::GLSLObject shader;
     // shader.addShader( "vertexShader_passthrough.glsl", sivelab::GLSLObject::VERTEX_SHADER );
-    shader.addShader( "vertexShader_blinn.glsl", sivelab::GLSLObject::VERTEX_SHADER );
-    shader.addShader( "fragmentShader_blinn.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
+    shader.addShader( "vertexShader_lambertian.glsl", sivelab::GLSLObject::VERTEX_SHADER );
+    shader.addShader( "fragmentShader_lambertian.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
     // shader.addShader( "fragmentShader_passthrough.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
     shader.createProgram();
 
@@ -223,6 +280,16 @@ int main(void)
     specularID = shader.createUniform( "specular" );
     shininessID = shader.createUniform( "shininess" );
     diffID = shader.createUniform( "diffuse" );
+
+    sivelab::GLSLObject gammaShader;
+    gammaShader.addShader("vertexShader_screenQuad.glsl", sivelab::GLSLObject::VERTEX_SHADER);
+    gammaShader.addShader("fragmentShader_gammaCorrection.glsl", sivelab::GLSLObject::FRAGMENT_SHADER);
+    gammaShader.createProgram();
+
+    GLuint gammaTextureID = gammaShader.createUniform("fboTexture");
+    GLuint gammaGammaID = gammaShader.createUniform("gamma");
+
+    float gammaValue = 2.2f;  // Standard gamma value
 
     glm::mat4 modelTransform = glm::mat4(1.0);
 
@@ -304,8 +371,13 @@ int main(void)
         glUniform1f(shininessID, shininess);
 
 
-        
-        // glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+        glfwGetFramebufferSize(window, &fb_width, &fb_height);
+
+        glEnable(GL_DEPTH_TEST);
+        glBindFramebuffer(GL_FRAMEBUFFER, fboID);  // <<<<<-----------
+        glViewport(0, 0, fb_width, fb_height);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         
         //Sphere
         glm::mat4 sphereModel = glm::translate(glm::mat4(1.0f), glm::vec3(1, 8, 0));
@@ -390,6 +462,31 @@ int main(void)
 
         glBindVertexArray(0);
         shader.deactivate();
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);  // Bind default framebuffer (back buffer)
+        glViewport(0, 0, fb_width, fb_height);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glDisable(GL_DEPTH_TEST);
+
+        gammaShader.activate();
+
+        // Bind FBO color texture to texture unit 0
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, fboTextureID);
+        glUniform1i(gammaTextureID, 0);
+
+        // Set gamma value
+        glUniform1f(gammaGammaID, gammaValue);
+
+        // Draw screen-filling quad
+        glBindVertexArray(screenQuadVAO);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glBindVertexArray(0);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        gammaShader.deactivate();
 
         // Swap the front and back buffers
         glfwSwapBuffers(window);

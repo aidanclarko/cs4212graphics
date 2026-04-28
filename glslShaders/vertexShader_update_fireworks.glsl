@@ -26,7 +26,7 @@ void main() {
     out_index = in_index;
     out_gravity = in_gravity;
     out_color = in_color;
-    float dt = 0.02;
+    float dt = 0.016;
 
     if(in_fireworkTimer > 0) {
         out_fireworkTimer = in_fireworkTimer - dt;

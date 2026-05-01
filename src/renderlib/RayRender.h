@@ -27,8 +27,9 @@ class RayRender {
 
                             Ray r;
                             HitStruct h{ 
-                                .cameraPos = persCam->getPos(),
-                                .scene = scene
+                                .scene = scene,
+                                .cameraPos = persCam->getPos()
+                                
                             };
 
                             float pOffset = (p + random_float()) /rpp_NSquare;

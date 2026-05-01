@@ -23,6 +23,7 @@ public:
     : Particles(0), color(color), gravity(gravity), lifeSpan(lifeSpan), fileName(fileName), density(density) {
         vertices = loadVertices(fileName);
         particleCount = vertices.size() * density;
+        std::cout << particleCount << std::endl;
         particles = std::vector<Obj>(particleCount);
     }
 
@@ -91,8 +92,20 @@ public:
 
         const char* varyings[] = { "out_pos", "out_color", "out_life_span", "out_velocity", "out_gravity", "out_index", "out_prevPos", "out_initLifeSpan" };
         glTransformFeedbackVaryings(updateProgram, 8, varyings, GL_INTERLEAVED_ATTRIBS);
-        glLinkProgram(updateProgram); 
+        
+        glLinkProgram(updateProgram);
+
+        glLinkProgram(updateProgram);
     }
+
+    void update(int current) override {
+    Particles<Obj>::update(current);  // calls the TF code above
+
+    // Obj debug;
+    // glBindBuffer(GL_ARRAY_BUFFER, vbo[1 - current]);
+    // glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Obj), &debug);
+    // std::cerr << "pos: " << debug.pos.x << " " << debug.pos.y << " " << debug.pos.z << std::endl;
+}
 
 private:
     int density;

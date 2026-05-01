@@ -12,6 +12,7 @@ add_library (cs4212-renderlib
   Particles.h 
   Fireworks.h
   ParticleObj.h
+  ParticleWave.h
 )
 
 target_link_libraries(cs4212-renderlib PUBLIC PNG::PNG)

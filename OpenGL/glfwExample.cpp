@@ -21,6 +21,7 @@
 #include "render_helpers.h"
 #include "Fireworks.h"
 #include "ParticleObj.h"
+#include "ParticleWave.h"
 
 int CheckGLErrors(const char *s)
 {
@@ -94,7 +95,7 @@ int main(void)
     float far = -5.0f;
 
     // glm::mat4 M_ortho = glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, near, far);
-    vec3 m_pos(0, 10, 40);  
+    vec3 m_pos(0, 0, 20);  
     vec3 m_viewDir(0, 0, -1);
 
     PerspectiveCamera cam(fb_width, fb_height, m_pos, m_viewDir, 0.5f, 1.0f, 3.14159f/4.0f, 1.0f, 0.1f, 100.0f);
@@ -138,76 +139,83 @@ int main(void)
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, 
                  pngWidth, pngHeight, 
                  0, GL_RGB,
-                 GL_UNSIGNED_BYTE, texData.data()) ;
+                 GL_FLOAT, texData.data()) ;
     glBindTexture(GL_TEXTURE_2D, 0);
 
     ParticleObj f1(
-        "../../src/json/al.obj",
+        "../../src/json/hand.obj",
         glm::vec4(1, 1, 1, 1),
         glm::vec4(0.0, 0.0002, 0, 0),
-        10.0f, 200
+        10.0f, 100, 10
     );
 
-    // fireworks do not work with size params, better var names in the constructor
-    // also, think about how to accomplish something interesting for a final scene
+    Fireworks f2(
+        1000,
+        glm::vec4(1, 0, 1, 1),
+        glm::vec4(10, 0, -20, 1),
+        glm::vec4(0, -0.0001, 0, 0),
+        5.0f, 10, 5, 0.02, 10
+    );
 
-    // Fireworks f2(
-    //     1000,
-    //     glm::vec4(1, 0, 1, 1),
-    //     glm::vec4(-10, 0, 3, 1),
-    //     glm::vec4(0, -0.00001, 0, 0),
-    //     5.0f, 10, 5, 1
-    // );
+    Fireworks f3(
+        1000,
+        glm::vec4(0, 0, 1, 1),
+        glm::vec4(-10, 0, -20, 1),
+        glm::vec4(0, -0.001, 0, 0),
+        4.0f, 5, 3, 0.2, 5
+    );
 
-    // Fireworks f3(
-    //     1000,
-    //     glm::vec4(0, 0, 1, 1),
-    //     glm::vec4(10, 0, 3, 1),
-    //     glm::vec4(0, -0.0001, 0, 0),
-    //     4.0f, 5, 3, 500
-    // );
+    Fireworks f4(
+        10000,
+        glm::vec4(0, 1, 1, 1),
+        glm::vec4(0, 0, -20, 1),
+        glm::vec4(0, -0.001, 0, 0),
+        5.0f, 10, 5, 0.02, 10
+    );
 
-    // Fireworks f4(
-    //     10000,
-    //     glm::vec4(0, 1, 1, 1),
-    //     glm::vec4(12, 0, 3, 1),
-    //     glm::vec4(0, -0.0001, 0, 0),
-    //     5.0f, 6, 5, 50
-    // );
+    Fireworks f5(
+        10000,
+        glm::vec4(1, 1, 0, 1),
+        glm::vec4(20, 0, -1, 1),
+        glm::vec4(0, -0.001, 0, 0),
+        6.0f, 6, 5, 0.005, 10
+    );
 
-    // Fireworks f5(
-    //     10000,
-    //     glm::vec4(1, 1, 0, 1),
-    //     glm::vec4(-12, 0, -1, 1),
-    //     glm::vec4(0, -0.0001, 0, 0),
-    //     6.0f, 6, 5, 50
-    // );
+    ParticleWave w(100, 1, 5.0f);
     
 
     f1.initParticles();
-    // f2.initParticles();
-    // f3.initParticles();
-    // f4.initParticles();
-    // f5.initParticles();
+    f2.initParticles();
+    f3.initParticles();
+    f4.initParticles();
+    f5.initParticles();
+    w.initParticles();
+
 
     f1.initBuffers();
-    // f2.initBuffers();
-    // f3.initBuffers();
-    // f4.initBuffers();
-    // f5.initBuffers();
+    f2.initBuffers();
+    f3.initBuffers();
+    f4.initBuffers();
+    f5.initBuffers();
+    w.initBuffers();
 
     f1.setupAttributes();
-    // f2.setupAttributes();
-    // f3.setupAttributes();
-    // f4.setupAttributes();
-    // f5.setupAttributes();
+    f2.setupAttributes();
+    f3.setupAttributes();
+    f4.setupAttributes();
+    f5.setupAttributes();
+    w.setupAttributes();
 
     // Create a shader using my GLSLObject class                                                  
-    sivelab::GLSLObject shader, updateShaderHand;
+    sivelab::GLSLObject shader, fireworkShader, waveShader, updateShaderHand, updateShaderFirework, updateShaderWave;
     f1.initDrawShader(shader);
+    f2.initDrawShader(fireworkShader);
+    w.initDrawShader(waveShader);
 
+    // just a single instance no need to initUpdateShader for all fireworks
     f1.initUpdateShader(updateShaderHand);
-    // f2.initUpdateShader(updateShaderFirework);
+    f2.initUpdateShader(updateShaderFirework);
+    w.initUpdateShader(updateShaderWave);
 
     
 
@@ -286,12 +294,17 @@ int main(void)
         f1.update(current);
         updateShaderHand.deactivate();
 
-        // updateShaderFirework.activate();
-        // f2.update(current);
-        // f3.update(current);
-        // f4.update(current);
-        // // f5.update(current);
-        // updateShaderFirework.deactivate();
+        updateShaderFirework.activate();
+        f2.update(current);
+        f3.update(current);
+        f4.update(current);
+        f5.update(current);
+        updateShaderFirework.deactivate();
+
+        updateShaderWave.activate();
+        w.update(current);
+        updateShaderWave.deactivate();
+
         glDisable(GL_RASTERIZER_DISCARD);
                                                                                     
         int next = 1 - current;
@@ -300,24 +313,44 @@ int main(void)
         glUniformMatrix4fv(projMatrixID, 1, GL_FALSE, glm::value_ptr(M_pers));
         glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, glm::value_ptr(M_view));
 
-        // this does nothing idk how to do it
-
+        // enable additive blendig for fire effect
         glEnable(GL_BLEND);
         glBlendEquation(GL_FUNC_ADD);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
         glDepthMask(GL_FALSE);
-
+        
         f1.draw(next);
-        // f2.draw(next);
-        // f3.draw(next);
-        // f4.draw(next);
-        // f5.draw(next);
 
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
 
-        glBindVertexArray(0);
         shader.deactivate();
+
+        fireworkShader.activate();
+        GLuint fwProjID = fireworkShader.createUniform("projMatrix");
+        GLuint fwViewID = fireworkShader.createUniform("viewMatrix");
+        glUniformMatrix4fv(fwProjID, 1, GL_FALSE, glm::value_ptr(M_pers));
+        glUniformMatrix4fv(fwViewID, 1, GL_FALSE, glm::value_ptr(M_view));
+
+        f2.draw(next);
+        f3.draw(next);
+        f4.draw(next);
+        f5.draw(next);
+
+        fireworkShader.deactivate();
+
+        waveShader.activate();
+        GLuint wProjID = waveShader.createUniform("projMatrix");
+        GLuint wViewID = waveShader.createUniform("viewMatrix");
+        GLuint wTimeID = waveShader.createUniform("time");
+        glUniformMatrix4fv(wProjID, 1, GL_FALSE, glm::value_ptr(M_pers));
+        glUniformMatrix4fv(wViewID, 1, GL_FALSE, glm::value_ptr(M_view));
+        glUniform1f(wTimeID, (float)glfwGetTime());
+        w.draw(0);
+        waveShader.deactivate();
+
+        glBindVertexArray(0);
+        
         current = next;
 
         // Swap the front and back buffers

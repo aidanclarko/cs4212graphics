@@ -19,8 +19,8 @@ struct Obj {
 class ParticleObj : public Particles<Obj> {
 public:
     
-    ParticleObj(std::string fileName, glm::vec4 color, glm::vec4 gravity, float lifeSpan, int density)
-    : Particles(0), color(color), gravity(gravity), lifeSpan(lifeSpan), fileName(fileName), density(density) {
+    ParticleObj(std::string fileName, glm::vec4 color, glm::vec4 gravity, float lifeSpan, int density, float pointSize)
+    : Particles(0), color(color), gravity(gravity), lifeSpan(lifeSpan), fileName(fileName), density(density), pointSize(pointSize) {
         vertices = loadVertices(fileName);
         particleCount = vertices.size() * density;
         std::cout << particleCount << std::endl;
@@ -80,9 +80,15 @@ public:
     }
 
     void initDrawShader(sivelab::GLSLObject& shader) override {
-        shader.addShader( "vertexShader_particles.glsl", sivelab::GLSLObject::VERTEX_SHADER );
-        shader.addShader( "fragmentShader_particles.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
+        shader.addShader( "vertexShader_particles_obj.glsl", sivelab::GLSLObject::VERTEX_SHADER );
+        shader.addShader( "fragmentShader_particles_obj.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
         shader.createProgram();
+        
+        //uniforms
+        shader.activate();
+        GLint pointSizeID = shader.createUniform("pointSize");
+        glUniform1f(pointSizeID, pointSize);
+        shader.deactivate();
     }
 
     void initUpdateShader(sivelab::GLSLObject& updateShader) override {
@@ -98,20 +104,12 @@ public:
         glLinkProgram(updateProgram);
     }
 
-    void update(int current) override {
-    Particles<Obj>::update(current);  // calls the TF code above
-
-    // Obj debug;
-    // glBindBuffer(GL_ARRAY_BUFFER, vbo[1 - current]);
-    // glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Obj), &debug);
-    // std::cerr << "pos: " << debug.pos.x << " " << debug.pos.y << " " << debug.pos.z << std::endl;
-}
-
 private:
     int density;
     std::string fileName;
     glm::vec4 color;
     glm::vec4 gravity;
     float lifeSpan;
+    float pointSize;
     std::vector<vec3> vertices;
 };

@@ -17,9 +17,9 @@ struct Firework {
 
 class Fireworks : public Particles<Firework> {
 public:
-    Fireworks(int count, glm::vec4 color, glm::vec4 startingPos, glm::vec4 gravity, float lifeSpan, float expTime, float timer, float maxSize)
+    Fireworks(int count, glm::vec4 color, glm::vec4 startingPos, glm::vec4 gravity, float lifeSpan, float expTime, float timer, float maxSize, float pointSize)
         : Particles(count), color(color), startingPos(startingPos), fireworkTimer(timer), maxSize(maxSize),
-          gravity(gravity), lifeSpan(lifeSpan), expTime(expTime) 
+          gravity(gravity), lifeSpan(lifeSpan), expTime(expTime), pointSize(pointSize)
           {
                 particleCount = count;
                 particles = std::vector<Firework>(count);
@@ -29,7 +29,7 @@ public:
         for(int i = 0; i < particleCount; i++) {
             float phi = random_float(0.0, 2 * M_PI);
             float theta = random_float(0.0, M_PI);
-            float size = random_float(0.2, size);
+            float size = random_float(0.2, maxSize);
 
             particles[i].pos = startingPos;
             particles[i].color = color;
@@ -78,9 +78,16 @@ public:
     }
 
     void initDrawShader(sivelab::GLSLObject& shader) override {
-        shader.addShader( "vertexShader_particles.glsl", sivelab::GLSLObject::VERTEX_SHADER );
-        shader.addShader( "fragmentShader_particles.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
+        shader.addShader( "vertexShader_particles_fireworks.glsl", sivelab::GLSLObject::VERTEX_SHADER );
+        shader.addShader( "fragmentShader_particles_fireworks.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
+
         shader.createProgram();
+
+        //uniforms
+        shader.activate();
+        GLint pointSizeID = shader.createUniform("pointSize");
+        glUniform1f(pointSizeID, pointSize);
+        shader.deactivate();
     }
 
     void initUpdateShader(sivelab::GLSLObject& updateShader) override {
@@ -101,4 +108,5 @@ private:
     glm::vec4 gravity;
     float lifeSpan;
     float expTime;
+    float pointSize;
 };

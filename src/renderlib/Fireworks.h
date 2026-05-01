@@ -10,6 +10,7 @@ struct Firework {
     glm::vec4 gravity;
     float index;
     float expTime;
+    float initLifeSpan;
     float fireworkTimer;
 };
 
@@ -28,21 +29,23 @@ public:
         for(int i = 0; i < particleCount; i++) {
             float phi = random_float(0.0, 2 * M_PI);
             float theta = random_float(0.0, M_PI);
-            float size = random_float(0.001, 0.02);
+            float size = random_float(0.2, size);
 
             particles[i].pos = startingPos;
             particles[i].color = color;
             particles[i].velocity = glm::vec4(
                 size * sin(theta) * cos(phi),
-                size * sin(theta) * sin(phi),
                 size * cos(theta),
+                size * sin(theta) * sin(phi),
                 0.0f
             );
+            float ls = random_float(1, lifeSpan);
             particles[i].gravity   = gravity;
-            particles[i].life_span = random_float(1, lifeSpan);
+            particles[i].life_span = ls;
             particles[i].index     = float(i);
             particles[i].expTime   = expTime;
             particles[i].fireworkTimer = fireworkTimer; 
+            particles[i].initLifeSpan = ls;
         }
     }
 
@@ -66,7 +69,9 @@ public:
                 glEnableVertexAttribArray(6);
                 glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, sizeof(Firework), (void*)offsetof(Firework, expTime));
                 glEnableVertexAttribArray(7);
-                glVertexAttribPointer(7, 1, GL_FLOAT, GL_FALSE, sizeof(Firework), (void*)offsetof(Firework, fireworkTimer));
+                glVertexAttribPointer(7, 1, GL_FLOAT, GL_FALSE, sizeof(Firework), (void*)offsetof(Firework, initLifeSpan));
+                glEnableVertexAttribArray(8);
+                glVertexAttribPointer(8, 1, GL_FLOAT, GL_FALSE, sizeof(Firework), (void*)offsetof(Firework, fireworkTimer));
             }
 
             glBindVertexArray(0);
@@ -83,8 +88,8 @@ public:
         updateShader.addShader("fragmentShader_discard.glsl", sivelab::GLSLObject::FRAGMENT_SHADER);
         GLuint updateProgram = updateShader.createProgram();
 
-        const char* varyings[] = { "out_pos", "out_color", "out_life_span", "out_velocity", "out_gravity", "out_index", "out_expTime", "out_fireworkTimer" };
-        glTransformFeedbackVaryings(updateProgram, 8, varyings, GL_INTERLEAVED_ATTRIBS);
+        const char* varyings[] = { "out_pos", "out_color", "out_life_span", "out_velocity", "out_gravity", "out_index", "out_expTime", "out_initLifeSpan", "out_fireworkTimer" };
+        glTransformFeedbackVaryings(updateProgram, 9, varyings, GL_INTERLEAVED_ATTRIBS);
         glLinkProgram(updateProgram); 
     }
 

@@ -12,17 +12,19 @@ struct Obj {
     glm::vec4 gravity;
     float index;
     glm::vec4 prevPos;
+    float initLifeSpan;
 };
 
 
 class ParticleObj : public Particles<Obj> {
 public:
-    // two instances of loading obj file... FIX
+    
     ParticleObj(std::string fileName, glm::vec4 color, glm::vec4 gravity, float lifeSpan, int density)
-        : Particles(loadVertices(fileName).size() * density), vertices(loadVertices(fileName)), color(color),
-          gravity(gravity), lifeSpan(lifeSpan), fileName(fileName), density(density) {
-            particles = std::vector<Obj>(vertices.size() * density);
-          }
+    : Particles(0), color(color), gravity(gravity), lifeSpan(lifeSpan), fileName(fileName), density(density) {
+        vertices = loadVertices(fileName);
+        particleCount = vertices.size() * density;
+        particles = std::vector<Obj>(particleCount);
+    }
 
     std::vector<vec3> loadVertices(const std::string& fileName) {
         ObjMesh obj(fileName);
@@ -36,13 +38,15 @@ public:
                 float x = vertices[i].x() + random_float(-0.1f, 0.5f);
                 float y = vertices[i].y() + random_float(-0.1f, 0.5f);
                 float z = vertices[i].z() + random_float(-0.1f, 0.5f);
+                float ls = random_float(0.01, lifeSpan);
 
                 particles[p].prevPos = glm::vec4(x, y, z, 1.0f);
                 particles[p].pos = glm::vec4(x, y, z, 1);
                 particles[p].color = color;
                 particles[p].velocity = glm::vec4(0.5, -0.01, 50.0, 0);
                 particles[p].gravity = gravity;
-                particles[p].life_span = random_float(1, lifeSpan);
+                particles[p].life_span = ls;
+                particles[p].initLifeSpan = ls;
                 particles[p].index = float(p);
                 p++;
             }
@@ -68,6 +72,8 @@ public:
             glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(Obj), (void*)offsetof(Obj, index));
             glEnableVertexAttribArray(6);
             glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(Obj), (void*)offsetof(Obj, prevPos));
+            glEnableVertexAttribArray(7);
+            glVertexAttribPointer(7, 1, GL_FLOAT, GL_FALSE, sizeof(Obj), (void*)offsetof(Obj, initLifeSpan));
         }
         glBindVertexArray(0);
     }
@@ -83,8 +89,8 @@ public:
         updateShader.addShader("fragmentShader_discard.glsl", sivelab::GLSLObject::FRAGMENT_SHADER);
         GLuint updateProgram = updateShader.createProgram();
 
-        const char* varyings[] = { "out_pos", "out_color", "out_life_span", "out_velocity", "out_gravity", "out_index", "out_prevPos" };
-        glTransformFeedbackVaryings(updateProgram, 7, varyings, GL_INTERLEAVED_ATTRIBS);
+        const char* varyings[] = { "out_pos", "out_color", "out_life_span", "out_velocity", "out_gravity", "out_index", "out_prevPos", "out_initLifeSpan" };
+        glTransformFeedbackVaryings(updateProgram, 8, varyings, GL_INTERLEAVED_ATTRIBS);
         glLinkProgram(updateProgram); 
     }
 

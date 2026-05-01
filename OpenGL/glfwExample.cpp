@@ -107,70 +107,107 @@ int main(void)
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    //textures
+
+    std::string texFileName = "noise.png";
+    png::image<png::rgb_pixel> texPNGImage;
+    texPNGImage.read(texFileName);
+
+    int pngWidth = texPNGImage.get_width();
+    int pngHeight = texPNGImage.get_height();
+
+    std::vector<float> texData(pngWidth * pngHeight * 3);
+
+    size_t idx = 0;
+    for(size_t row = 0; row < pngHeight; row++) {
+        for(size_t col = 0; col < pngWidth; col++) {
+            png::rgb_pixel pixel = texPNGImage[pngHeight - row - 1][col];
+            texData[idx++] = pixel.red / 255.0f;
+            texData[idx++] = pixel.green / 255.0f;
+            texData[idx++] = pixel.blue / 255.0f;
+        }
+    }
+
+    GLuint texID;
+    glGenTextures(1, &texID);
+    glBindTexture(GL_TEXTURE_2D, texID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, 
+                 pngWidth, pngHeight, 
+                 0, GL_RGB,
+                 GL_UNSIGNED_BYTE, texData.data()) ;
+    glBindTexture(GL_TEXTURE_2D, 0);
+
     ParticleObj f1(
-        "../../src/json/hand.obj",
+        "../../src/json/al.obj",
         glm::vec4(1, 1, 1, 1),
-        glm::vec4(0.0, -0.0002, 0, 0),
-        6.0f, 500
+        glm::vec4(0.0, 0.0002, 0, 0),
+        10.0f, 200
     );
 
-    Fireworks f2(
-        10000,
-        glm::vec4(1, 0, 1, 1),
-        glm::vec4(-10, 0, 3, 1),
-        glm::vec4(0, -0.00001, 0, 0),
-        4.0f, 5, 5, 10
-    );
+    // fireworks do not work with size params, better var names in the constructor
+    // also, think about how to accomplish something interesting for a final scene
 
-    Fireworks f3(
-        100000,
-        glm::vec4(0, 0, 1, 1),
-        glm::vec4(10, 0, 3, 1),
-        glm::vec4(0, -0.0001, 0, 0),
-        4.0f, 5, 3, 20
-    );
+    // Fireworks f2(
+    //     1000,
+    //     glm::vec4(1, 0, 1, 1),
+    //     glm::vec4(-10, 0, 3, 1),
+    //     glm::vec4(0, -0.00001, 0, 0),
+    //     5.0f, 10, 5, 1
+    // );
 
-    Fireworks f4(
-        100000,
-        glm::vec4(0, 1, 1, 1),
-        glm::vec4(12, 0, 3, 1),
-        glm::vec4(0, -0.0001, 0, 0),
-        10.0f, 6, 5, 50
-    );
+    // Fireworks f3(
+    //     1000,
+    //     glm::vec4(0, 0, 1, 1),
+    //     glm::vec4(10, 0, 3, 1),
+    //     glm::vec4(0, -0.0001, 0, 0),
+    //     4.0f, 5, 3, 500
+    // );
 
-    Fireworks f5(
-        100000,
-        glm::vec4(1, 1, 0, 1),
-        glm::vec4(-12, 0, -1, 1),
-        glm::vec4(0, -0.0001, 0, 0),
-        6.0f, 6, 5, 50
-    );
+    // Fireworks f4(
+    //     10000,
+    //     glm::vec4(0, 1, 1, 1),
+    //     glm::vec4(12, 0, 3, 1),
+    //     glm::vec4(0, -0.0001, 0, 0),
+    //     5.0f, 6, 5, 50
+    // );
+
+    // Fireworks f5(
+    //     10000,
+    //     glm::vec4(1, 1, 0, 1),
+    //     glm::vec4(-12, 0, -1, 1),
+    //     glm::vec4(0, -0.0001, 0, 0),
+    //     6.0f, 6, 5, 50
+    // );
     
 
     f1.initParticles();
-    f2.initParticles();
-    f3.initParticles();
-    f4.initParticles();
-    f5.initParticles();
+    // f2.initParticles();
+    // f3.initParticles();
+    // f4.initParticles();
+    // f5.initParticles();
 
     f1.initBuffers();
-    f2.initBuffers();
-    f3.initBuffers();
-    f4.initBuffers();
-    f5.initBuffers();
+    // f2.initBuffers();
+    // f3.initBuffers();
+    // f4.initBuffers();
+    // f5.initBuffers();
 
     f1.setupAttributes();
-    f2.setupAttributes();
-    f3.setupAttributes();
-    f4.setupAttributes();
-    f5.setupAttributes();
+    // f2.setupAttributes();
+    // f3.setupAttributes();
+    // f4.setupAttributes();
+    // f5.setupAttributes();
 
     // Create a shader using my GLSLObject class                                                  
-    sivelab::GLSLObject shader, updateShaderHand, updateShaderFirework;
+    sivelab::GLSLObject shader, updateShaderHand;
     f1.initDrawShader(shader);
 
     f1.initUpdateShader(updateShaderHand);
-    f2.initUpdateShader(updateShaderFirework);
+    // f2.initUpdateShader(updateShaderFirework);
 
     
 
@@ -186,6 +223,10 @@ int main(void)
     diffID = shader.createUniform( "diffuse" );
     texUnitID = shader.createUniform( "texUnit" );
 
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texID);
+    glUniform1i(texUnitID, 0);
+
 
     glm::mat4 modelTransform = glm::mat4(1.0);
 
@@ -199,16 +240,16 @@ int main(void)
     glm::vec3 lightPos(-6, 2, 20);
     
 
-    //Shader Components
-    glm::vec3 diffuseSph(0.263, 0.678, 0.306);
-    glm::vec3 diffuseSphTwo(0.812, 0.388, 0.706);
-    glm::vec3 diffuseTriOne(0.196, 0.98, 0.616);
-    glm::vec3 diffuseTriTwo(0.329, 0.988, 1);
-    glm::vec3 diffuseTriThree(0.486, 0.176, 0.702);
-    glm::vec3 diffuseCrow(0.749, 0.329, 0.329);
-    glm::vec3 specular(1.0f, 1.0f, 1.0f);
-    float shininess = 120.0f;
-    float shininessT = 80.0f;
+    // //Shader Components
+    // glm::vec3 diffuseSph(0.263, 0.678, 0.306);
+    // glm::vec3 diffuseSphTwo(0.812, 0.388, 0.706);
+    // glm::vec3 diffuseTriOne(0.196, 0.98, 0.616);
+    // glm::vec3 diffuseTriTwo(0.329, 0.988, 1);
+    // glm::vec3 diffuseTriThree(0.486, 0.176, 0.702);
+    // glm::vec3 diffuseCrow(0.749, 0.329, 0.329);
+    // glm::vec3 specular(1.0f, 1.0f, 1.0f);
+    // float shininess = 120.0f;
+    // float shininessT = 80.0f;
 
 
     double timeDiff = 0.0, startFrameTime = 0.0, endFrameTime = 0.0;
@@ -245,12 +286,12 @@ int main(void)
         f1.update(current);
         updateShaderHand.deactivate();
 
-        updateShaderFirework.activate();
-        f2.update(current);
-        f3.update(current);
-        f4.update(current);
-        f5.update(current);
-        updateShaderFirework.deactivate();
+        // updateShaderFirework.activate();
+        // f2.update(current);
+        // f3.update(current);
+        // f4.update(current);
+        // // f5.update(current);
+        // updateShaderFirework.deactivate();
         glDisable(GL_RASTERIZER_DISCARD);
                                                                                     
         int next = 1 - current;
@@ -258,11 +299,22 @@ int main(void)
         shader.activate();
         glUniformMatrix4fv(projMatrixID, 1, GL_FALSE, glm::value_ptr(M_pers));
         glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, glm::value_ptr(M_view));
+
+        // this does nothing idk how to do it
+
+        glEnable(GL_BLEND);
+        glBlendEquation(GL_FUNC_ADD);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        glDepthMask(GL_FALSE);
+
         f1.draw(next);
-        f2.draw(next);
-        f3.draw(next);
-        f4.draw(next);
-        f5.draw(next);
+        // f2.draw(next);
+        // f3.draw(next);
+        // f4.draw(next);
+        // f5.draw(next);
+
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
 
         glBindVertexArray(0);
         shader.deactivate();
@@ -311,7 +363,6 @@ int main(void)
         if (glfwGetKey( window, GLFW_KEY_ESCAPE ) == GLFW_PRESS) {
             glfwSetWindowShouldClose(window, 1);
         }
-
     }
   
     glfwTerminate();

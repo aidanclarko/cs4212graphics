@@ -10,6 +10,10 @@ This project uses CMake and vcpkg for managing C++ dependencies.
 things to fix are in issues tab
 
 ## To run and test my Gold image
+
+lots of glsl files were used for this...
+in /glslShader/glslShaderParticles they are all in there, copy all of them into buildVCPkg/OpenGL folder
+
 ```
 cd buildVCPKg/OpenGL
 cmake --build ..

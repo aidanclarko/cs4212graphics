@@ -18,6 +18,10 @@
 #include "Triangle.h"
 #include "ObjMesh.h"
 #include "GLMSphere.h"
+#include "render_helpers.h"
+#include "Fireworks.h"
+#include "ParticleObj.h"
+#include "ParticleWave.h"
 
 int CheckGLErrors(const char *s)
 {
@@ -68,7 +72,7 @@ int main(void)
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glClearColor(0.38, 0.502, 0.71, 1.0);
+    glClearColor(0, 0, 0, 1.0);
 
     int fb_width, fb_height;
     glfwGetFramebufferSize(window, &fb_width, &fb_height);
@@ -91,7 +95,8 @@ int main(void)
     float far = -5.0f;
 
     // glm::mat4 M_ortho = glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, near, far);
-    vec3 m_pos(1, 2,0), m_viewDir(0,0,-1);
+    vec3 m_pos(0, 0, 20);  
+    vec3 m_viewDir(0, 0, -1);
 
     PerspectiveCamera cam(fb_width, fb_height, m_pos, m_viewDir, 0.5f, 1.0f, 3.14159f/4.0f, 1.0f, 0.1f, 100.0f);
     glm::mat4 M_pers = cam.getPerspectiveMatrix();
@@ -101,13 +106,13 @@ int main(void)
     glGetIntegerv(GL_MAJOR_VERSION, &major_version);
     std::cout << "GL_MAJOR_VERSION: " << major_version << std::endl;
 
-    GLuint m_triangleVBO[1], m_VAO;
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // textures
+    //textures
 
-    std::string textureFileName = "textureAtlas.png";
+    std::string texFileName = "noise.png";
     png::image<png::rgb_pixel> texPNGImage;
-    texPNGImage.read(textureFileName);
+    texPNGImage.read(texFileName);
 
     int pngWidth = texPNGImage.get_width();
     int pngHeight = texPNGImage.get_height();
@@ -124,10 +129,6 @@ int main(void)
         }
     }
 
-
-    // create a Vertex Array Buffer to hold our triangle data                                               
-    glGenBuffers(1, m_triangleVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, m_triangleVBO[0]);
     GLuint texID;
     glGenTextures(1, &texID);
     glBindTexture(GL_TEXTURE_2D, texID);
@@ -135,131 +136,86 @@ int main(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 
-                pngWidth, pngHeight, 
-                0, GL_RGB, GL_FLOAT, texData.data());
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, 
+                 pngWidth, pngHeight, 
+                 0, GL_RGB,
+                 GL_FLOAT, texData.data()) ;
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    // this is the actual triangle data that will be copied to                                              
-    // the GPU memory
-    //bunny raw data could easily be implemented here                                                                                       
-    // std::vector< float > host_VertexBuffer{
-    //     -3.0f, -3.0f, 0.0f,    1.0f , 0.0f, 0.0f,                             
-    //      3.0f, -3.0f, 0.0f,    0.0f, 1.0f, 0.0f,                                 
-    //      0.0f, 3.0f, 0.0f,     0.0f, 0.0f, 1.0f 
-    // };   
-
-    //reused from initSquare() -> GLMSphere
-    float radius = 4;
-    vec3 v0 = unit_vector(vec3(-0.5, -0.5,  0.5)) * radius;
-    vec3 v1 = unit_vector(vec3( 0.5, -0.5,  0.5)) * radius;
-    vec3 v2 = unit_vector(vec3( 0.5,  0.5,  0.5)) * radius;
-    vec3 v3 = unit_vector(vec3(-0.5,  0.5,  0.5)) * radius;
-    vec3 v5 = unit_vector(vec3( 0.5, -0.5, -0.5)) * radius;
-    vec3 v6 = unit_vector(vec3( 0.5,  0.5, -0.5)) * radius;
-
-    Triangle tri1(
-        v0, v1, v3,
-        glm::vec2(0.0f, 0.5f),
-        glm::vec2(0.5f, 0.5f),
-        glm::vec2(0.0f, 1.0f)
+    ParticleObj f1(
+        "../../src/json/hand.obj",
+        glm::vec4(1, 1, 1, 1),
+        glm::vec4(0.0, 0.0002, 0, 0),
+        10.0f, 100, 10
     );
 
-    Triangle tri2(
-        v1, v2, v3,
-        glm::vec2(0.5f, 0.5f),
-        glm::vec2(0.5f, 1.0f),
-        glm::vec2(0.0f, 1.0f)
+    Fireworks f2(
+        1000,
+        glm::vec4(1, 0, 1, 1),
+        glm::vec4(10, 0, -20, 1),
+        glm::vec4(0, -0.0001, 0, 0),
+        5.0f, 10, 5, 0.02, 10
     );
 
-    Triangle tri3(
-        v1, v5, v2,
-        glm::vec2(0.5f, 0.5f),
-        glm::vec2(1.0f, 0.5f),
-        glm::vec2(0.5f, 1.0f)
+    Fireworks f3(
+        1000,
+        glm::vec4(0, 0, 1, 1),
+        glm::vec4(-10, 0, -20, 1),
+        glm::vec4(0, -0.001, 0, 0),
+        4.0f, 5, 3, 0.2, 5
     );
 
-    Triangle tri4(
-        v5, v6, v2,
-        glm::vec2(1.0f, 0.5f),
-        glm::vec2(1.0f, 1.0f),
-        glm::vec2(0.5f, 1.0f)
+    Fireworks f4(
+        10000,
+        glm::vec4(0, 1, 1, 1),
+        glm::vec4(0, 0, -20, 1),
+        glm::vec4(0, -0.001, 0, 0),
+        5.0f, 10, 5, 0.02, 10
     );
-   
-    // GLMSphere g(2);
-    // ObjMesh obj("../../src/json/hlcrow.obj");  
-    std::shared_ptr<std::vector<Triangle>> triList = std::make_shared<std::vector<Triangle>>();
-    // int sphereIDX = triList->size();
 
-    // std::vector<Triangle>& objFaces = obj.getFaces();
-    // triList->insert(triList->end(), objFaces.begin(), objFaces.end());
-    // int objIDX = objFaces.size();
-  
-    triList->push_back(tri1);
-    triList->push_back(tri2);
-    triList->push_back(tri3);
-    triList->push_back(tri4);
-
+    Fireworks f5(
+        10000,
+        glm::vec4(1, 1, 0, 1),
+        glm::vec4(20, 0, -1, 1),
+        glm::vec4(0, -0.001, 0, 0),
+        6.0f, 6, 5, 0.005, 10
+    );
 
     
-    std::vector< VertexPoint > host_VertexBuffer;
     
-    // auto vb2 = t2.toVertexBuffer();
-    // host_VertexBuffer.insert(host_VertexBuffer.end(), vb2.begin(), vb2.end());
-    // t.toVertexBuffer();
+
+    f1.initParticles();
+    f2.initParticles();
+    f3.initParticles();
+    f4.initParticles();
+    f5.initParticles();
+
+
+    f1.initBuffers();
+    f2.initBuffers();
+    f3.initBuffers();
+    f4.initBuffers();
+    f5.initBuffers();
     
-    for(int i = 0; i < triList->size(); i++) {
-        // if(i < sphereIDX) {
-        //     auto faces = triList->at(i).toVertexBufferSphere();
-        //     host_VertexBuffer.insert(host_VertexBuffer.end(), faces.begin(), faces.end());
-        // } else {
-            auto faces = triList->at(i).toVertexBuffer();
-            host_VertexBuffer.insert(host_VertexBuffer.end(), faces.begin(), faces.end());
-        // }
-    }
 
-
-    int numBytes = host_VertexBuffer.size() * sizeof(VertexPoint);
-
-    // copy the numBytes from host_VertexBuffer t the GPU and store in                                      
-    // the currently bound VBO                                                                              
-    glBufferData(GL_ARRAY_BUFFER, numBytes, host_VertexBuffer.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // once copied, we no longer need the data on the host (CPU) :) 
-    int vertexCount = host_VertexBuffer.size();                                            
-    host_VertexBuffer.clear();
-    // create a vertex array object that will map the attributes in                                         
-    // our vertex buffer to different location attributes for our                                           
-    // shaders                                                                                              
-    glGenVertexArrays(1, &m_VAO);
-    glBindVertexArray(m_VAO);
-
-    // VAO details here - we only have 1 attribute or location                                              
-    // (Position of the vertex)    
+    f1.setupAttributes();
+    f2.setupAttributes();
+    f3.setupAttributes();
+    f4.setupAttributes();
+    f5.setupAttributes();
     
-    glBindBuffer(GL_ARRAY_BUFFER, m_triangleVBO[0]);
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexPoint), (void*)offsetof(VertexPoint, point));
-
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexPoint), (void*)offsetof(VertexPoint, normal));
-
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VertexPoint), (void*)offsetof(VertexPoint, texCoords));
-
-    glBindVertexArray(0);
+    // Create a shader using my GLSLObject class                                                  
+    sivelab::GLSLObject shader, fireworkShader, updateShaderHand, updateShaderFirework;
+    f1.initDrawShader(shader);
+    f2.initDrawShader(fireworkShader);
 
 
+    // just a single instance no need to initUpdateShader for all fireworks
+    f1.initUpdateShader(updateShaderHand);
+    f2.initUpdateShader(updateShaderFirework);
 
-    // Create a shader using my GLSLObject class                                                            
-    sivelab::GLSLObject shader;
-    // shader.addShader( "vertexShader_passthrough.glsl", sivelab::GLSLObject::VERTEX_SHADER );
-    shader.addShader( "vertexShader_blinn.glsl", sivelab::GLSLObject::VERTEX_SHADER );
-    shader.addShader( "fragmentShader_blinn.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
-    // shader.addShader( "fragmentShader_passthrough.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
-    shader.createProgram();
+    
 
     GLuint projMatrixID, viewMatrixID, modelMatrixID, normalMatrixID, lightPosID, diffID, camPosID, specularID, shininessID, texUnitID;
     projMatrixID = shader.createUniform( "projMatrix" );
@@ -272,6 +228,10 @@ int main(void)
     shininessID = shader.createUniform( "shininess" );
     diffID = shader.createUniform( "diffuse" );
     texUnitID = shader.createUniform( "texUnit" );
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texID);
+    glUniform1i(texUnitID, 0);
 
 
     glm::mat4 modelTransform = glm::mat4(1.0);
@@ -286,28 +246,20 @@ int main(void)
     glm::vec3 lightPos(-6, 2, 20);
     
 
-    //Shader Components
-    glm::vec3 diffuseSph(0.263, 0.678, 0.306);
-    glm::vec3 diffuseSphTwo(0.812, 0.388, 0.706);
-    glm::vec3 diffuseTriOne(0.196, 0.98, 0.616);
-    glm::vec3 diffuseTriTwo(0.329, 0.988, 1);
-    glm::vec3 diffuseTriThree(0.486, 0.176, 0.702);
-    glm::vec3 diffuseCrow(0.749, 0.329, 0.329);
-    glm::vec3 specular(1.0f, 1.0f, 1.0f);
-    float shininess = 120.0f;
-    float shininessT = 80.0f;
+    // //Shader Components
+    // glm::vec3 diffuseSph(0.263, 0.678, 0.306);
+    // glm::vec3 diffuseSphTwo(0.812, 0.388, 0.706);
+    // glm::vec3 diffuseTriOne(0.196, 0.98, 0.616);
+    // glm::vec3 diffuseTriTwo(0.329, 0.988, 1);
+    // glm::vec3 diffuseTriThree(0.486, 0.176, 0.702);
+    // glm::vec3 diffuseCrow(0.749, 0.329, 0.329);
+    // glm::vec3 specular(1.0f, 1.0f, 1.0f);
+    // float shininess = 120.0f;
+    // float shininessT = 80.0f;
 
 
     double timeDiff = 0.0, startFrameTime = 0.0, endFrameTime = 0.0;
 
-    
-    
-    /* Loop until the user closes the window */
-    /* game loop above is initialization getting itn on gpu, load
-        scene file 
-        todo: load triangle
-    
-    */
 
     
     float rotationAngle = 0.0f;
@@ -317,6 +269,8 @@ int main(void)
     
     float camAngle = 0.0f;
 
+   int current = 0;
+   glEnable(GL_PROGRAM_POINT_SIZE);
 
     while (!glfwWindowShouldClose(window))
     {  
@@ -329,45 +283,59 @@ int main(void)
         // Clear the window's buffer (or clear the screen to our
         // background color)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_RASTERIZER_DISCARD);
 
         glm::mat4 M_view = cam.lookAt();
-        /* Render your objects here */
-        shader.activate();
-    
-
-        rotationAngle += 0.01;
-        if(rotationAngle > 2.0 * 3.14159) rotationAngle = 0.0f;
-        modelTransform = glm::rotate(glm::mat4(1.0f), rotationAngle, glm::vec3(0, 1, 0));
         M_normal = glm::transpose(glm::inverse( modelTransform ));
+        /* Render your objects here */
+        updateShaderHand.activate();
+        f1.update(current);
+        updateShaderHand.deactivate();
 
-        glBindVertexArray(m_VAO);
+        updateShaderFirework.activate();
+        f2.update(current);
+        f3.update(current);
+        f4.update(current);
+        f5.update(current);
+        updateShaderFirework.deactivate();
 
-        // copy from the host to the device the view matrix and the projection matrix                                                                                       
-        glUniformMatrix4fv(projMatrixID, 1, GL_FALSE, glm::value_ptr( M_pers ));
-        glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, glm::value_ptr( M_view ));
-        // glUniformMatrix4fv(normalMatrixID, 1, GL_FALSE, glm::value_ptr( M_normal ));
-        glUniform3fv(lightPosID, 1, glm::value_ptr(lightPos));
-        glUniform3fv(camPosID, 1, glm::value_ptr(camPos));
-        // glUniform3fv(diffID, 1, glm::value_ptr(diffuse));
-        glUniform3fv(specularID, 1, glm::value_ptr(specular));
-        glUniform1f(shininessID, shininess);
+        glDisable(GL_RASTERIZER_DISCARD);
+                                                                                    
+        int next = 1 - current;
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texID);
-        glUniform1i(texUnitID, 0);
+        shader.activate();
+        glUniformMatrix4fv(projMatrixID, 1, GL_FALSE, glm::value_ptr(M_pers));
+        glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, glm::value_ptr(M_view));
+
+        // enable additive blendig for fire effect
+        glEnable(GL_BLEND);
+        glBlendEquation(GL_FUNC_ADD);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        glDepthMask(GL_FALSE);
         
-        // glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+        f1.draw(next);
 
-        //triangle objs
-        glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, glm::value_ptr(modelTransform));
-        glUniformMatrix4fv(normalMatrixID, 1, GL_FALSE, glm::value_ptr(M_normal));
-        glUniform3fv(diffID, 1, glm::value_ptr(diffuseTriThree));
-        glDrawArrays(GL_TRIANGLES, 0, 12);
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
 
+        shader.deactivate();
 
+        fireworkShader.activate();
+        GLuint fwProjID = fireworkShader.createUniform("projMatrix");
+        GLuint fwViewID = fireworkShader.createUniform("viewMatrix");
+        glUniformMatrix4fv(fwProjID, 1, GL_FALSE, glm::value_ptr(M_pers));
+        glUniformMatrix4fv(fwViewID, 1, GL_FALSE, glm::value_ptr(M_view));
+
+        f2.draw(next);
+        f3.draw(next);
+        f4.draw(next);
+        f5.draw(next);
+
+        fireworkShader.deactivate();
 
         glBindVertexArray(0);
-        shader.deactivate();
+        
+        current = next;
 
         // Swap the front and back buffers
         glfwSwapBuffers(window);
@@ -412,7 +380,6 @@ int main(void)
         if (glfwGetKey( window, GLFW_KEY_ESCAPE ) == GLFW_PRESS) {
             glfwSetWindowShouldClose(window, 1);
         }
-
     }
   
     glfwTerminate();

@@ -9,19 +9,14 @@ This project uses CMake and vcpkg for managing C++ dependencies.
 
 things to fix are in issues tab
 
-## To run and test my OpenGL Lab:
+## To run and test my Gold image
 ```
-cd buildVCPkg/OpenGL
+cd buildVCPKg/OpenGL
 cmake --build ..
-./glfwExample
+./finalRender
 ```
 my interactive camera uses WASD movement and the arrow keys to look around
 
-## To run and test my Silver image raytraced
-```
-cd buildVCPKg
-cmake --build .
-./src/render_main -w 600 -h 600 -r 4 -k 1 -i ../src/json/silver.json -o silver -b "0.38 0.502 0.71"
 
 ```
 ## Comparison Image Answer

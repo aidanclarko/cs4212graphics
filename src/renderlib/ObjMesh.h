@@ -40,6 +40,7 @@ class ObjMesh {
         }
 
         std::vector<Triangle>& getFaces()  { return faces; }
+        std::vector<vec3>& getVerticies() { return verticies; }
     private:
         std::string fileName;
         std::vector<vec3> verticies;

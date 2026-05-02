@@ -23,7 +23,6 @@ public:
     : Particles(0), color(color), gravity(gravity), lifeSpan(lifeSpan), fileName(fileName), density(density), pointSize(pointSize) {
         vertices = loadVertices(fileName);
         particleCount = vertices.size() * density;
-        std::cout << particleCount << std::endl;
         particles = std::vector<Obj>(particleCount);
     }
 

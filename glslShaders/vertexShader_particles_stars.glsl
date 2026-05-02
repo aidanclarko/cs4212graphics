@@ -8,7 +8,6 @@ uniform mat4 viewMatrix;
 uniform float pointSize;
 
 out vec4 color;
-out float t;
 
 void main() {
     gl_Position = projMatrix * viewMatrix * in_pos;

@@ -9,5 +9,5 @@ in float t;
 void main() {
     float alpha = texture(texUnit, gl_PointCoord).r;
 
-    fragColor = vec4(color.rgb, alpha);
+    fragColor = color;
 }

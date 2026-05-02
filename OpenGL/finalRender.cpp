@@ -24,6 +24,7 @@
 #include "ParticleWave.h"
 #include "Stars.h"
 #include "Trees.h"
+#include "Fire.h"
 
 int CheckGLErrors(const char *s)
 {
@@ -131,7 +132,7 @@ int main(void)
     float far = -5.0f;
 
     // glm::mat4 M_ortho = glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, near, far);
-    vec3 m_pos(0, 0, 20);  
+    vec3 m_pos(0, 2, 20);  
     vec3 m_viewDir(0, 0, -1);
 
     PerspectiveCamera cam(fb_width, fb_height, m_pos, m_viewDir, 0.5f, 1.0f, 3.14159f/4.0f, 1.0f, 0.1f, 100.0f);
@@ -157,10 +158,14 @@ int main(void)
     glBindBuffer(GL_ARRAY_BUFFER, m_triangleVBO[0]);
 
     ObjMesh obj("../../src/json/terrain.obj");
+    ObjMesh obj2("../../src/json/campfire.obj");
 
-    Trees t(obj, 5.0, 50 );
+    Trees t(obj, 3.0, 50 );
 
     std::shared_ptr<std::vector<Triangle>> triList = std::make_shared<std::vector< Triangle >>(obj.getFaces());
+    std::vector< Triangle > tris = obj2.getFaces();
+    int campfireCount = tris.size() * 3;
+    triList->insert(triList->end(), tris.begin(), tris.end() );
     std::vector< VertexPoint > host_VertexBuffer;
 
     for(int i = 0; i < triList->size(); i++) {
@@ -175,8 +180,7 @@ int main(void)
     glBufferData(GL_ARRAY_BUFFER, numBytes, host_VertexBuffer.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    int vertexCount = host_VertexBuffer.size();   
-    std::cout << vertexCount << std::endl;                                         
+    int vertexCount = host_VertexBuffer.size();                                        
     host_VertexBuffer.clear();
 
     glGenVertexArrays(1, &m_VAO);
@@ -197,27 +201,48 @@ int main(void)
         "../../src/json/hand.obj",
         glm::vec4(1, 1, 1, 1),
         glm::vec4(0.0, 0.0002, 0, 0),
-        10.0f, 1000, 4.0
+        10.0f, 100, 2.0
     );
 
     Stars s(
         10000, glm::vec4(1, 1, 1, 1), 2.0f
     );
 
+    Fires f(
+        glm::vec4(0, 0.5, 14, 1), 10000,
+        glm::vec4(1, 1, 1, 1),
+        glm::vec4(0.0, 0.00001, 0, 0),
+        15.0, 20.0
+    );
+
+    Fireworks firework(
+        1000,
+        glm::vec4(0, 0, 1, 1),
+        glm::vec4(20, 0, -5, 1),
+        glm::vec4(0, -0.0001, 0, 0),
+        3.0f, 5, 6, 0.02, 2
+    );
+
     f1.initParticles();
     s.initParticles();
     t.initParticles();
+    f.initParticles();
+    firework.initParticles();
     f1.initBuffers();
     s.initBuffers();
+    f.initBuffers();
     t.initBuffers();
+    firework.initBuffers();
     f1.setupAttributes();
     s.setupAttributes();
     t.setupAttributes();
+    f.setupAttributes();
+    firework.setupAttributes();
     
 
     // Create a shader using my GLSLObject class 
     // just a single instance no need to initUpdateShader for all particle types                                                 
-    sivelab::GLSLObject shader, shaderHand, updateShaderHand, shaderStars, updateShaderStars, treeShader, updateTreeShader;
+    sivelab::GLSLObject shader, shaderHand, updateShaderHand, shaderStars, updateShaderStars, treeShader, updateTreeShader, shaderFire, updateShaderFire, shaderFirework, updateShaderFirework;
 
     shader.addShader( "vertexShader_lambertian.glsl", sivelab::GLSLObject::VERTEX_SHADER );
     shader.addShader( "fragmentShader_lambertian.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
@@ -226,9 +251,13 @@ int main(void)
     f1.initDrawShader(shaderHand);
     s.initDrawShader(shaderStars);
     t.initDrawShader(treeShader);
+    f.initDrawShader(shaderFire);
+    firework.initDrawShader(shaderFirework);
     f1.initUpdateShader(updateShaderHand);
     s.initUpdateShader(updateShaderStars);
     t.initUpdateShader(updateTreeShader);
+    f.initUpdateShader(updateShaderFire);
+    firework.initUpdateShader(updateShaderFirework);
 
    
 
@@ -278,7 +307,8 @@ int main(void)
     
 
     // //Shader Components
-    glm::vec3 diffuse(0.263, 0.80, 0.306);
+    glm::vec3 diffuseTerrain(0.263, 0.80, 0.306);
+    glm::vec3 diffuseCamp(0.545, 0.271, 0.075);
     glm::vec3 specular(1.0f, 1.0f, 1.0f);
     float shininess = 120.0f;
 
@@ -327,6 +357,14 @@ int main(void)
         t.update(current);
         updateTreeShader.deactivate();
 
+        updateShaderFire.activate();
+        f.update(current);
+        updateShaderFire.deactivate();
+
+        updateShaderFirework.activate();
+        firework.update(current);
+        updateShaderFirework.deactivate();
+
         glDisable(GL_RASTERIZER_DISCARD);
 
         shader.activate();
@@ -340,10 +378,22 @@ int main(void)
         glUniformMatrix4fv(normalMatrixID, 1, GL_FALSE, glm::value_ptr( M_normal ));
         glUniform3fv(lightPosID, 1, glm::value_ptr(lightPos));
         glUniform3fv(camPosID, 1, glm::value_ptr(camPos));
-        glUniform3fv(diffID, 1, glm::value_ptr(diffuse));
+        glUniform3fv(diffID, 1, glm::value_ptr(diffuseTerrain));
         glUniform3fv(specularID, 1, glm::value_ptr(specular));
         glUniform1f(shininessID, shininess);
-        glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+        glDrawArrays(GL_TRIANGLES, 0, vertexCount - campfireCount);
+
+        glm::mat4 campModel = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0.5, 13.5));
+        glUniformMatrix4fv(projMatrixID, 1, GL_FALSE, glm::value_ptr( M_pers ));
+        glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, glm::value_ptr( M_view ));
+        glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, glm::value_ptr(campModel));
+        glUniformMatrix4fv(normalMatrixID, 1, GL_FALSE, glm::value_ptr( M_normal ));
+        glUniform3fv(lightPosID, 1, glm::value_ptr(lightPos));
+        glUniform3fv(camPosID, 1, glm::value_ptr(camPos));
+        glUniform3fv(diffID, 1, glm::value_ptr(diffuseCamp));
+        glUniform3fv(specularID, 1, glm::value_ptr(specular));
+        glUniform1f(shininessID, shininess);
+        glDrawArrays(GL_TRIANGLES, vertexCount - campfireCount,  campfireCount);
 
         glBindVertexArray(0);
         shader.deactivate();
@@ -380,6 +430,36 @@ int main(void)
         t.draw(next);
         treeShader.deactivate();
 
+        shaderFire.activate();
+        glUniformMatrix4fv(projMatrixPID, 1, GL_FALSE, glm::value_ptr(M_pers));
+        glUniformMatrix4fv(viewMatrixPID, 1, GL_FALSE, glm::value_ptr(M_view));
+
+         // enable additive blendig for fire effect
+        glEnable(GL_BLEND);
+        glBlendEquation(GL_FUNC_ADD);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        glDepthMask(GL_FALSE);
+        f.draw(next);
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
+        shaderFire.deactivate();
+
+        shaderFirework.activate();
+        glUniformMatrix4fv(projMatrixPID, 1, GL_FALSE, glm::value_ptr(M_pers));
+        glUniformMatrix4fv(viewMatrixPID, 1, GL_FALSE, glm::value_ptr(M_view));
+
+        // enable additive blendig for fire effect
+        glEnable(GL_BLEND);
+        glBlendEquation(GL_FUNC_ADD);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        glDepthMask(GL_FALSE);
+        
+        firework.draw(next);
+
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
+
+        shaderFirework.deactivate();
 
         glBindVertexArray(0);
         

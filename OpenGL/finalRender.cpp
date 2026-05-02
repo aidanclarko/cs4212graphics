@@ -22,12 +22,48 @@
 #include "Fireworks.h"
 #include "ParticleObj.h"
 #include "ParticleWave.h"
+#include "Stars.h"
+#include "Trees.h"
 
 int CheckGLErrors(const char *s)
 {
     int errCount = 0;
     return errCount;
 }
+
+GLuint handleTexture(std::string texFileName) {
+    png::image<png::rgba_pixel> texPNGImage;
+    texPNGImage.read(texFileName);
+
+    int pngWidth = texPNGImage.get_width();
+    int pngHeight = texPNGImage.get_height();
+
+    std::vector<float> texData(pngWidth * pngHeight * 4);  // 4 channels
+
+    size_t idx = 0;
+    for(size_t row = 0; row < pngHeight; row++) {
+        for(size_t col = 0; col < pngWidth; col++) {
+            png::rgba_pixel pixel = texPNGImage[pngHeight - row - 1][col];
+            texData[idx++] = pixel.red   / 255.0f;
+            texData[idx++] = pixel.green / 255.0f;
+            texData[idx++] = pixel.blue  / 255.0f;
+            texData[idx++] = pixel.alpha / 255.0f;
+        }
+    }
+
+    GLuint texID;
+    glGenTextures(1, &texID);
+    glBindTexture(GL_TEXTURE_2D, texID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, pngWidth, pngHeight, 0, GL_RGBA, GL_FLOAT, texData.data());
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return texID;
+}
+
+
 
 int main(void)
 {
@@ -110,114 +146,95 @@ int main(void)
 
     //textures
 
-    std::string texFileName = "noise.png";
-    png::image<png::rgb_pixel> texPNGImage;
-    texPNGImage.read(texFileName);
+    GLuint texID = handleTexture("noise.png");
+    GLuint treeTexID = handleTexture("tree2.png");
 
-    int pngWidth = texPNGImage.get_width();
-    int pngHeight = texPNGImage.get_height();
 
-    std::vector<float> texData(pngWidth * pngHeight * 3);
+    GLuint m_triangleVBO[1], m_VAO;
 
-    size_t idx = 0;
-    for(size_t row = 0; row < pngHeight; row++) {
-        for(size_t col = 0; col < pngWidth; col++) {
-            png::rgb_pixel pixel = texPNGImage[pngHeight - row - 1][col];
-            texData[idx++] = pixel.red / 255.0f;
-            texData[idx++] = pixel.green / 255.0f;
-            texData[idx++] = pixel.blue / 255.0f;
-        }
+    // create a Vertex Array Buffer to hold our triangle data                                               
+    glGenBuffers(1, m_triangleVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, m_triangleVBO[0]);
+
+    ObjMesh obj("../../src/json/terrain.obj");
+
+    Trees t(obj, 5.0, 50 );
+
+    std::shared_ptr<std::vector<Triangle>> triList = std::make_shared<std::vector< Triangle >>(obj.getFaces());
+    std::vector< VertexPoint > host_VertexBuffer;
+
+    for(int i = 0; i < triList->size(); i++) {
+        auto faces = triList->at(i).toVertexBuffer();
+        host_VertexBuffer.insert(host_VertexBuffer.end(), faces.begin(), faces.end());
     }
 
-    GLuint texID;
-    glGenTextures(1, &texID);
-    glBindTexture(GL_TEXTURE_2D, texID);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, 
-                 pngWidth, pngHeight, 
-                 0, GL_RGB,
-                 GL_FLOAT, texData.data()) ;
-    glBindTexture(GL_TEXTURE_2D, 0);
+    int numBytes = host_VertexBuffer.size() * sizeof(VertexPoint);
+
+    // copy the numBytes from host_VertexBuffer t the GPU and store in                                      
+    // the currently bound VBO                                                                              
+    glBufferData(GL_ARRAY_BUFFER, numBytes, host_VertexBuffer.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    int vertexCount = host_VertexBuffer.size();   
+    std::cout << vertexCount << std::endl;                                         
+    host_VertexBuffer.clear();
+
+    glGenVertexArrays(1, &m_VAO);
+    glBindVertexArray(m_VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_triangleVBO[0]);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexPoint), (void*)offsetof(VertexPoint, point));
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexPoint), (void*)offsetof(VertexPoint, normal));
+
+    glBindVertexArray(0);
+
 
     ParticleObj f1(
         "../../src/json/hand.obj",
         glm::vec4(1, 1, 1, 1),
         glm::vec4(0.0, 0.0002, 0, 0),
-        10.0f, 100, 10
+        10.0f, 1000, 4.0
     );
 
-    Fireworks f2(
-        1000,
-        glm::vec4(1, 0, 1, 1),
-        glm::vec4(10, 0, -20, 1),
-        glm::vec4(0, -0.0001, 0, 0),
-        5.0f, 10, 5, 0.02, 10
+    Stars s(
+        10000, glm::vec4(1, 1, 1, 1), 2.0f
     );
-
-    Fireworks f3(
-        1000,
-        glm::vec4(0, 0, 1, 1),
-        glm::vec4(-10, 0, -20, 1),
-        glm::vec4(0, -0.001, 0, 0),
-        4.0f, 5, 3, 0.2, 5
-    );
-
-    Fireworks f4(
-        10000,
-        glm::vec4(0, 1, 1, 1),
-        glm::vec4(0, 0, -20, 1),
-        glm::vec4(0, -0.001, 0, 0),
-        5.0f, 10, 5, 0.02, 10
-    );
-
-    Fireworks f5(
-        10000,
-        glm::vec4(1, 1, 0, 1),
-        glm::vec4(20, 0, -1, 1),
-        glm::vec4(0, -0.001, 0, 0),
-        6.0f, 6, 5, 0.005, 10
-    );
-
-    
-    
 
     f1.initParticles();
-    f2.initParticles();
-    f3.initParticles();
-    f4.initParticles();
-    f5.initParticles();
-
-
+    s.initParticles();
+    t.initParticles();
     f1.initBuffers();
-    f2.initBuffers();
-    f3.initBuffers();
-    f4.initBuffers();
-    f5.initBuffers();
-    
-
+    s.initBuffers();
+    t.initBuffers();
     f1.setupAttributes();
-    f2.setupAttributes();
-    f3.setupAttributes();
-    f4.setupAttributes();
-    f5.setupAttributes();
+    s.setupAttributes();
+    t.setupAttributes();
     
 
-    // Create a shader using my GLSLObject class                                                  
-    sivelab::GLSLObject shader, fireworkShader, updateShaderHand, updateShaderFirework;
-    f1.initDrawShader(shader);
-    f2.initDrawShader(fireworkShader);
+    // Create a shader using my GLSLObject class 
+    // just a single instance no need to initUpdateShader for all particle types                                                 
+    sivelab::GLSLObject shader, shaderHand, updateShaderHand, shaderStars, updateShaderStars, treeShader, updateTreeShader;
 
+    shader.addShader( "vertexShader_lambertian.glsl", sivelab::GLSLObject::VERTEX_SHADER );
+    shader.addShader( "fragmentShader_lambertian.glsl", sivelab::GLSLObject::FRAGMENT_SHADER );
+    shader.createProgram();
 
-    // just a single instance no need to initUpdateShader for all fireworks
+    f1.initDrawShader(shaderHand);
+    s.initDrawShader(shaderStars);
+    t.initDrawShader(treeShader);
     f1.initUpdateShader(updateShaderHand);
-    f2.initUpdateShader(updateShaderFirework);
+    s.initUpdateShader(updateShaderStars);
+    t.initUpdateShader(updateTreeShader);
+
+   
 
     
-
-    GLuint projMatrixID, viewMatrixID, modelMatrixID, normalMatrixID, lightPosID, diffID, camPosID, specularID, shininessID, texUnitID;
+    //3D objects
+    GLuint projMatrixID, viewMatrixID, modelMatrixID, normalMatrixID, lightPosID, diffID, camPosID, specularID, shininessID;
     projMatrixID = shader.createUniform( "projMatrix" );
     viewMatrixID = shader.createUniform( "viewMatrix" );
     modelMatrixID = shader.createUniform( "modelMatrix" );
@@ -227,17 +244,31 @@ int main(void)
     specularID = shader.createUniform( "specular" );
     shininessID = shader.createUniform( "shininess" );
     diffID = shader.createUniform( "diffuse" );
+
+    //particles
+    GLuint projMatrixPID, viewMatrixPID, modelMatrixPID, texUnitFireID, texUnitTreeID, texUnitID;
+    projMatrixPID = shaderHand.createUniform( "projMatrix" );
+    viewMatrixPID = shaderHand.createUniform( "viewMatrix" );
+    modelMatrixPID = shaderHand.createUniform( "modelMatrix" );
     texUnitID = shader.createUniform( "texUnit" );
+    texUnitTreeID = shaderHand.createUniform( "texUnitTree" );
+
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texID);
-    glUniform1i(texUnitID, 0);
+    glUniform1i(texUnitID, texID);
+
+    treeShader.activate();
+    GLuint treeTexUnitID = treeShader.createUniform("texUnitTree");
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, treeTexID);
+    glUniform1i(treeTexUnitID, 1);
+    treeShader.deactivate();
 
 
     glm::mat4 modelTransform = glm::mat4(1.0);
 
     float rot  = 0.0f;
-    // modelTransform = glm::rotate(modelTransform, rot, glm::vec3(0, 1, 0));
 
 
     glm::mat4 M_normal = glm::mat4(1.0);
@@ -247,15 +278,9 @@ int main(void)
     
 
     // //Shader Components
-    // glm::vec3 diffuseSph(0.263, 0.678, 0.306);
-    // glm::vec3 diffuseSphTwo(0.812, 0.388, 0.706);
-    // glm::vec3 diffuseTriOne(0.196, 0.98, 0.616);
-    // glm::vec3 diffuseTriTwo(0.329, 0.988, 1);
-    // glm::vec3 diffuseTriThree(0.486, 0.176, 0.702);
-    // glm::vec3 diffuseCrow(0.749, 0.329, 0.329);
-    // glm::vec3 specular(1.0f, 1.0f, 1.0f);
-    // float shininess = 120.0f;
-    // float shininessT = 80.0f;
+    glm::vec3 diffuse(0.263, 0.80, 0.306);
+    glm::vec3 specular(1.0f, 1.0f, 1.0f);
+    float shininess = 120.0f;
 
 
     double timeDiff = 0.0, startFrameTime = 0.0, endFrameTime = 0.0;
@@ -263,14 +288,14 @@ int main(void)
 
     
     float rotationAngle = 0.0f;
+    
     //MESH MODE
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
     
     float camAngle = 0.0f;
 
-   int current = 0;
-   glEnable(GL_PROGRAM_POINT_SIZE);
+    int current = 0;
+    glEnable(GL_PROGRAM_POINT_SIZE);
 
     while (!glfwWindowShouldClose(window))
     {  
@@ -283,29 +308,51 @@ int main(void)
         // Clear the window's buffer (or clear the screen to our
         // background color)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_RASTERIZER_DISCARD);
 
         glm::mat4 M_view = cam.lookAt();
         M_normal = glm::transpose(glm::inverse( modelTransform ));
         /* Render your objects here */
+
+        glEnable(GL_RASTERIZER_DISCARD);
+
         updateShaderHand.activate();
         f1.update(current);
         updateShaderHand.deactivate();
 
-        updateShaderFirework.activate();
-        f2.update(current);
-        f3.update(current);
-        f4.update(current);
-        f5.update(current);
-        updateShaderFirework.deactivate();
+        updateShaderStars.activate();
+        s.update(current);
+        updateShaderStars.deactivate();
+
+        updateTreeShader.activate();
+        t.update(current);
+        updateTreeShader.deactivate();
 
         glDisable(GL_RASTERIZER_DISCARD);
+
+        shader.activate();
+
+        glBindVertexArray(m_VAO);
+
+        // copy from the host to the device the view matrix and the projection matrix                                                                                       
+        glUniformMatrix4fv(projMatrixID, 1, GL_FALSE, glm::value_ptr( M_pers ));
+        glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, glm::value_ptr( M_view ));
+        glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, glm::value_ptr(modelTransform));
+        glUniformMatrix4fv(normalMatrixID, 1, GL_FALSE, glm::value_ptr( M_normal ));
+        glUniform3fv(lightPosID, 1, glm::value_ptr(lightPos));
+        glUniform3fv(camPosID, 1, glm::value_ptr(camPos));
+        glUniform3fv(diffID, 1, glm::value_ptr(diffuse));
+        glUniform3fv(specularID, 1, glm::value_ptr(specular));
+        glUniform1f(shininessID, shininess);
+        glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+
+        glBindVertexArray(0);
+        shader.deactivate();
                                                                                     
         int next = 1 - current;
 
-        shader.activate();
-        glUniformMatrix4fv(projMatrixID, 1, GL_FALSE, glm::value_ptr(M_pers));
-        glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, glm::value_ptr(M_view));
+        shaderHand.activate();
+        glUniformMatrix4fv(projMatrixPID, 1, GL_FALSE, glm::value_ptr(M_pers));
+        glUniformMatrix4fv(viewMatrixPID, 1, GL_FALSE, glm::value_ptr(M_view));
 
         // enable additive blendig for fire effect
         glEnable(GL_BLEND);
@@ -318,20 +365,21 @@ int main(void)
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
 
-        shader.deactivate();
+        shaderHand.deactivate();
 
-        fireworkShader.activate();
-        GLuint fwProjID = fireworkShader.createUniform("projMatrix");
-        GLuint fwViewID = fireworkShader.createUniform("viewMatrix");
-        glUniformMatrix4fv(fwProjID, 1, GL_FALSE, glm::value_ptr(M_pers));
-        glUniformMatrix4fv(fwViewID, 1, GL_FALSE, glm::value_ptr(M_view));
+        shaderStars.activate();
+        glUniformMatrix4fv(projMatrixPID, 1, GL_FALSE, glm::value_ptr(M_pers));
+        glUniformMatrix4fv(viewMatrixPID, 1, GL_FALSE, glm::value_ptr(M_view));
 
-        f2.draw(next);
-        f3.draw(next);
-        f4.draw(next);
-        f5.draw(next);
+        s.draw(next);
+        shaderStars.deactivate();
 
-        fireworkShader.deactivate();
+        treeShader.activate();
+        glUniformMatrix4fv(projMatrixPID, 1, GL_FALSE, glm::value_ptr(M_pers));
+        glUniformMatrix4fv(viewMatrixPID, 1, GL_FALSE, glm::value_ptr(M_view));
+        t.draw(next);
+        treeShader.deactivate();
+
 
         glBindVertexArray(0);
         

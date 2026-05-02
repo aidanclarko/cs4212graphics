@@ -7,7 +7,8 @@ layout(location=3) in vec4 in_velocity;
 layout(location=4) in vec4 in_gravity;
 layout(location=5) in float in_index;
 layout(location=6) in float in_expTime;
-layout(location=7) in float in_fireworkTimer;
+layout(location=8) in float in_fireworkTimer;
+layout(location=7) in float in_initLifeSpan;
 
 out vec4 out_pos;
 out vec4 out_color;
@@ -17,6 +18,7 @@ out vec4 out_gravity;
 out float out_index;
 out float out_expTime; 
 out float out_fireworkTimer;
+out float out_initLifeSpan;
 
 float rand(vec2 seed) {
     return fract(sin(dot(seed, vec2(12.9898, 78.233))) * 43758.5453);
@@ -38,19 +40,17 @@ void main() {
     } else {
         if(in_expTime > 0.0) {
 
-        float delay = rand(vec2(in_index, 1.0)) * 0.008;
-        float launchSpeed = 0.02 * (1 - delay);
-        out_pos = in_pos + vec4(0.0f, launchSpeed, 0.0f, 0.0f);
+        out_pos = in_pos + vec4(0.0, 0.05, 0.0, 0.0);
         out_velocity = in_velocity;
         out_life_span = in_life_span;
-        out_expTime = in_expTime - 0.005;
+        out_expTime = in_expTime - dt;
 
         } else if(in_life_span > 0.0) {
 
             out_velocity = in_velocity + in_gravity;
             out_pos = in_pos + out_velocity;
             out_life_span = in_life_span - dt;
-            out_color = vec4(in_color.rgb, in_color.a - dt);
+            out_color = vec4(in_color.rgb, 1.0);
             out_expTime = 0.0;
 
         } else {
@@ -63,6 +63,7 @@ void main() {
 
         }
     }
+    out_initLifeSpan = in_initLifeSpan;
     gl_Position = vec4(0.0);
 }
 

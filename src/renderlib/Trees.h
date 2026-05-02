@@ -11,7 +11,7 @@ struct Tree {
 
 class Trees : public Particles<Tree> {
 public:
-    Trees(ObjMesh& o, float pointSize, int count) : count(count), pointSize(pointSize), o(o), Particles(0)
+    Trees(ObjMesh& o, float pointSize, int count) : count(count), pointSize(pointSize), o(o), Particles(count)
     {
         particleCount = count;
         particles = std::vector<Tree>(count);
@@ -19,7 +19,7 @@ public:
 
     void initParticles() override {
         float offset = 0.5;
-        std::vector< vec3 > terrainPos = o.getVerticies();
+        std::vector< vec3 > terrainPos = o.getVerticies();     
         for(int i = 0; i < count; i++) {
             vec3 pos = terrainPos[random_float(0, terrainPos.size() - 1 )];
             particles[i].pos = glm::vec4(pos.x() - offset, pos.y() - offset, pos.z() - offset, 1);
@@ -92,6 +92,6 @@ public:
 private:
     float pointSize;
     int count;
-    ObjMesh o;
+    ObjMesh& o;
     GLuint quadOffsetVBO, quadUVVBO;
 };

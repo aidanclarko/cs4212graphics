@@ -201,7 +201,7 @@ int main(void)
         "../../src/json/hand.obj",
         glm::vec4(1, 1, 1, 1),
         glm::vec4(0.0, 0.0002, 0, 0),
-        10.0f, 100, 2.0
+        10.0f, 100, 3.0
     );
 
     Stars s(
@@ -219,8 +219,16 @@ int main(void)
         1000,
         glm::vec4(0, 0, 1, 1),
         glm::vec4(20, 0, -5, 1),
+        glm::vec4(0, -0.00001, 0, 0),
+        2.0f, 5, 4, 0.002, 4.0
+    );
+
+    Fireworks firework2(
+        10000,
+        glm::vec4(1, 0, 0, 1),
+        glm::vec4(25, 0, -10, 1),
         glm::vec4(0, -0.0001, 0, 0),
-        3.0f, 5, 6, 0.02, 2
+        2.0f, 6, 5, 0.02, 5.0
     );
 
     f1.initParticles();
@@ -228,16 +236,19 @@ int main(void)
     t.initParticles();
     f.initParticles();
     firework.initParticles();
+    firework2.initParticles();
     f1.initBuffers();
     s.initBuffers();
     f.initBuffers();
     t.initBuffers();
     firework.initBuffers();
+    firework2.initBuffers();
     f1.setupAttributes();
     s.setupAttributes();
     t.setupAttributes();
     f.setupAttributes();
     firework.setupAttributes();
+    firework2.setupAttributes();
     
 
     // Create a shader using my GLSLObject class 
@@ -363,6 +374,7 @@ int main(void)
 
         updateShaderFirework.activate();
         firework.update(current);
+        firework2.update(current);
         updateShaderFirework.deactivate();
 
         glDisable(GL_RASTERIZER_DISCARD);
@@ -418,15 +430,20 @@ int main(void)
         shaderHand.deactivate();
 
         shaderStars.activate();
-        glUniformMatrix4fv(projMatrixPID, 1, GL_FALSE, glm::value_ptr(M_pers));
-        glUniformMatrix4fv(viewMatrixPID, 1, GL_FALSE, glm::value_ptr(M_view));
-
+        GLint starProg;
+        glGetIntegerv(GL_CURRENT_PROGRAM, &starProg);
+        glUniformMatrix4fv(glGetUniformLocation(starProg, "projMatrix"), 1, GL_FALSE, glm::value_ptr(M_pers));
+        glUniformMatrix4fv(glGetUniformLocation(starProg, "viewMatrix"), 1, GL_FALSE, glm::value_ptr(M_view));
         s.draw(next);
         shaderStars.deactivate();
 
         treeShader.activate();
-        glUniformMatrix4fv(projMatrixPID, 1, GL_FALSE, glm::value_ptr(M_pers));
-        glUniformMatrix4fv(viewMatrixPID, 1, GL_FALSE, glm::value_ptr(M_view));
+        GLint prog;
+        glGetIntegerv(GL_CURRENT_PROGRAM, &prog);
+        GLint projLoc = glGetUniformLocation(prog, "projMatrix");
+        GLint viewLoc = glGetUniformLocation(prog, "viewMatrix");
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(M_pers));
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(M_view));
         t.draw(next);
         treeShader.deactivate();
 
@@ -445,20 +462,18 @@ int main(void)
         shaderFire.deactivate();
 
         shaderFirework.activate();
-        glUniformMatrix4fv(projMatrixPID, 1, GL_FALSE, glm::value_ptr(M_pers));
-        glUniformMatrix4fv(viewMatrixPID, 1, GL_FALSE, glm::value_ptr(M_view));
-
-        // enable additive blendig for fire effect
+        GLint fwProg;
+        glGetIntegerv(GL_CURRENT_PROGRAM, &fwProg);
+        glUniformMatrix4fv(glGetUniformLocation(fwProg, "projMatrix"), 1, GL_FALSE, glm::value_ptr(M_pers));
+        glUniformMatrix4fv(glGetUniformLocation(fwProg, "viewMatrix"), 1, GL_FALSE, glm::value_ptr(M_view));
         glEnable(GL_BLEND);
         glBlendEquation(GL_FUNC_ADD);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
         glDepthMask(GL_FALSE);
-        
         firework.draw(next);
-
+        firework2.draw(next);
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
-
         shaderFirework.deactivate();
 
         glBindVertexArray(0);
